@@ -1,0 +1,1273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nonprofit Intake Screener</title>
+<style>
+  :root {
+    --bg: #f5f4fa; --panel: #ffffff; --ink: #1c1b22; --muted: #66647a; --line: #e1dfec;
+    --accent: #4f46e5; --accent-ink: #ffffff; --accent-soft: #ecebfd;
+    --crit: #b91c1c; --crit-soft: #fdecec; --warn: #b45309; --warn-soft: #fdf3e3; --ok: #047857; --ok-soft: #e4f5ee; --soft: #faf9fd;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131219; --panel: #1c1b24; --ink: #ebeaf2; --muted: #a09eb4; --line: #312f40;
+      --accent: #a5b4fc; --accent-ink: #15143a; --accent-soft: #24234a;
+      --crit: #f87171; --crit-soft: #3a1c1c; --warn: #fbbf24; --warn-soft: #3a2c12; --ok: #34d399; --ok-soft: #12302a; --soft: #22212c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  .eyebrow { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; }
+  h1 { margin: 0 0 4px; font-size: 1.75rem; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); max-width: 740px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-top: 20px; }
+  label, .label { display: block; font-weight: 600; margin-bottom: 6px; }
+  .hint { color: var(--muted); font-size: 0.875rem; font-weight: 400; }
+  input[type=password], input[type=text], input[type=email], input[type=tel], input[type=number], input[type=date], textarea, select {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); color: var(--ink); font: inherit; min-width: 0; }
+  textarea { min-height: 170px; resize: vertical; font-size: 0.95rem; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+  .grid2, .grid3, .grid4 { display: grid; gap: 14px; }
+  .grid2 { grid-template-columns: 1fr 1fr; } .grid3 { grid-template-columns: repeat(3, 1fr); } .grid4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 760px) { .grid2, .grid3 { grid-template-columns: 1fr; } .grid4 { grid-template-columns: 1fr 1fr; } }
+  button, .filebtn { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; display: inline-block; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button.small { padding: 6px 12px; font-size: 0.9rem; }
+  button:disabled { opacity: 0.55; cursor: not-allowed; }
+  .linkbtn { border: none; background: none; color: var(--accent); padding: 0; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+  .x { border: none; background: none; color: var(--muted); font-size: 1.2rem; padding: 2px 8px; }
+  .status { color: var(--muted); font-size: 0.9rem; }
+  .error { color: var(--crit); }
+  .notice { background: var(--accent-soft); border-radius: 8px; padding: 10px 12px; font-size: 0.9rem; margin-top: 12px; }
+  h2 { font-size: 1.15rem; margin: 0 0 10px; }
+  h3 { font-size: 1rem; margin: 0; }
+  details.panel > summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  details.panel > summary::-webkit-details-marker { display: none; }
+  details.panel > summary::after { content: "Show"; color: var(--accent); font-size: 0.9rem; font-weight: 600; }
+  details.panel[open] > summary::after { content: "Hide"; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); white-space: nowrap; }
+  .pill { display: inline-block; font-size: 0.76rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .p-likely { background: var(--ok-soft); color: var(--ok); }
+  .p-check { background: var(--warn-soft); color: var(--warn); }
+  .p-no { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+  .pr-urgent { background: var(--crit); color: #fff; } .pr-soon { background: var(--warn-soft); color: var(--warn); } .pr-routine { background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; min-width: 120px; background: var(--soft); }
+  .stat b { display: block; font-size: 1.5rem; line-height: 1.15; }
+  .stat span { color: var(--muted); font-size: 0.85rem; }
+  .stat.crit b { color: var(--crit); } .stat.warn b { color: var(--warn); } .stat.ok b { color: var(--ok); }
+  .banner { border-radius: 10px; padding: 12px 14px; margin-top: 20px; }
+  .banner.urgent { background: var(--crit-soft); border: 1px solid var(--crit); }
+  .banner.safety { background: var(--crit); color: #fff; }
+  .banner.safety a { color: #fff; }
+  .banner h3 { margin-bottom: 4px; }
+  .banner ul { margin: 6px 0 0; padding-left: 20px; }
+  /* Facts editor */
+  .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 14px; }
+  @media (max-width: 760px) { .facts { grid-template-columns: 1fr 1fr; } }
+  .facts label { font-size: 0.82rem; margin-bottom: 3px; }
+  .facts input, .facts select { padding: 7px 9px; font-size: 0.92rem; }
+  .flags { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; }
+  .flags label { font-weight: 400; font-size: 0.9rem; display: flex; gap: 6px; align-items: center; margin: 0; }
+  .flags select { width: auto; padding: 4px 6px; font-size: 0.85rem; }
+  .fpl { margin-top: 10px; font-size: 0.92rem; }
+  .fpl b { font-size: 1.05rem; }
+  /* Needs + matches */
+  .need { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  .need:last-child { border-bottom: none; }
+  .cat { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); min-width: 110px; padding-top: 2px; }
+  .match { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-top: 10px; }
+  .match.no { opacity: 0.75; }
+  .match-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+  ul.reasons { list-style: none; padding: 0; margin: 8px 0 0; font-size: 0.9rem; }
+  ul.reasons li { padding: 2px 0; }
+  .r-pass { color: var(--ok); } .r-fail { color: var(--crit); } .r-unknown { color: var(--warn); }
+  .docs { font-size: 0.88rem; color: var(--muted); margin-top: 6px; }
+  .refer { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .refer select { width: auto; padding: 5px 8px; font-size: 0.88rem; }
+  ol.questions { margin: 0; padding-left: 22px; }
+  ol.questions li { padding: 3px 0; }
+  .src { font-size: 0.75rem; color: var(--muted); }
+  /* People rows */
+  .person-row { display: grid; grid-template-columns: 1.1fr 1.6fr 1.1fr 1fr auto; gap: 8px; align-items: center; margin-top: 8px; }
+  .person-row input, .person-row select { padding: 7px 10px; font-size: 0.92rem; }
+  @media (max-width: 680px) { .person-row { grid-template-columns: 1fr 1fr; } }
+  .send-row { display: grid; grid-template-columns: 1fr 1.5fr 1.4fr auto; gap: 8px; align-items: center; margin-top: 10px; }
+  .send-row input, .send-row select { padding: 7px 10px; font-size: 0.9rem; }
+  @media (max-width: 600px) { .send-row { grid-template-columns: 1fr 1fr; } .send-row .who { grid-column: 1 / -1; } }
+  .who b { display: block; } .who span { color: var(--muted); font-size: 0.85rem; }
+  /* Program editor */
+  .prog-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-top: 10px; background: var(--soft); }
+  .prog-card.off { opacity: 0.6; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips label { font-weight: 500; font-size: 0.82rem; border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; display: flex; gap: 5px; align-items: center; margin: 0; background: var(--panel); }
+  .prog-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 12px; margin-top: 10px; }
+  @media (max-width: 760px) { .prog-grid { grid-template-columns: 1fr 1fr; } }
+  .prog-grid label { font-size: 0.8rem; margin-bottom: 3px; }
+  .prog-grid input { padding: 6px 9px; font-size: 0.9rem; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--soft); }
+  .recorder { margin-top: 14px; border: 1px dashed var(--line); border-radius: 10px; padding: 12px 14px; }
+  .rec-btn.recording { background: var(--crit); color: #fff; border-color: var(--crit); }
+  .rec-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: currentColor; margin-right: 6px; }
+  .recording .rec-dot { animation: pulse 1.2s infinite; background: #fff; }
+  @keyframes pulse { 50% { opacity: 0.3; } }
+  .interim { color: var(--muted); font-style: italic; font-size: 0.9rem; min-height: 1.3em; margin-top: 6px; }
+  .bar { height: 8px; border-radius: 4px; background: var(--accent); min-width: 2px; }
+  .bar.c { background: var(--crit); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #nextText { min-height: 300px; }
+  footer { margin-top: 28px; color: var(--muted); font-size: 0.85rem; }
+  [hidden] { display: none !important; }
+  @media print {
+    body { background: #fff; color: #000; }
+    .noprint, header, #setupPanel, #intakePanel, #results > .panel:not(#nextPanel), #results > .banner, #digestPanel, footer { display: none !important; }
+    #nextPanel { border: none; padding: 0; }
+    #nextText { border: none; background: #fff; min-height: auto; height: auto; font-size: 12pt; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="row" style="margin-top:0; justify-content:space-between; align-items:flex-start">
+      <div>
+        <p class="eyebrow" id="eyebrow">Client intake</p>
+        <h1>Intake → Program Matches</h1>
+      </div>
+      <button class="linkbtn noprint" id="shareLink">Copy tailored link</button>
+    </div>
+    <p>Type, paste or record a client's situation in any language. Claude pulls out the facts, then the page checks them against <b>your</b> programs' eligibility rules, shows exactly why each program fits or doesn't, lists what to ask next, and writes the client's next steps in their own language.</p>
+  </header>
+
+  <!-- Setup: organization, programs, team, saved intakes -->
+  <details class="panel noprint" id="setupPanel">
+    <summary><span>Organization, programs &amp; team <span class="hint" id="setupSummary"></span></span></summary>
+    <div style="margin-top:14px">
+      <div class="grid3">
+        <div><label for="orgName">Organization name</label><input id="orgName" type="text" maxlength="60" placeholder="e.g. Southwest Community Services"></div>
+        <div><label for="orgType">Type of organization</label><select id="orgType"></select></div>
+        <div><label for="region">Poverty guideline region</label>
+          <select id="region"><option value="contiguous">48 states &amp; DC</option><option value="alaska">Alaska</option><option value="hawaii">Hawaii</option></select></div>
+      </div>
+      <p class="hint" style="margin:6px 0 0">Changing the organization type offers a starter set of example programs. Replace them with your real programs and rules.</p>
+
+      <h3 style="margin-top:20px">Programs <span class="hint" id="progCount"></span></h3>
+      <p class="hint" style="margin:2px 0 0">Each program's rules are checked by the page, not by AI. Leave a rule empty if it doesn't apply.</p>
+      <div id="programs"></div>
+      <div class="row"><button class="small" id="addProgram">+ Add program</button><button class="small" id="resetPrograms">Load example programs for this type</button></div>
+
+      <h3 style="margin-top:22px">Staff</h3>
+      <p class="hint" style="margin:2px 0 0">Caseworkers can be assigned intakes. Supervisors get the weekly digest.</p>
+      <div id="people"></div>
+      <div class="row"><button class="small" id="addPerson">+ Add person</button></div>
+
+      <h3 style="margin-top:22px">Saved intakes</h3>
+      <p class="hint" style="margin:2px 0 6px">Saved in this browser only, never online. Client details are sensitive: use a backup file you store securely to move them between devices.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Date</th><th>Client</th><th>Priority</th><th>Status</th><th>Caseworker</th><th></th></tr></thead>
+        <tbody id="historyRows"></tbody>
+      </table></div>
+      <div class="row">
+        <button class="small" id="exportBackup">Export backup</button>
+        <button class="small" id="importBtn" type="button">Import backup</button>
+        <input id="importFile" type="file" accept="application/json,.json" hidden>
+      </div>
+    </div>
+  </details>
+
+  <!-- Intake -->
+  <section class="panel noprint" id="intakePanel">
+    <div class="grid4">
+      <div style="grid-column: span 2"><label for="key">Claude API key <span class="hint">— never saved</span></label><input id="key" type="password" placeholder="sk-ant-..." autocomplete="off"></div>
+      <div><label for="clientLabel">Client ID or initials</label><input id="clientLabel" type="text" maxlength="30" placeholder="e.g. MR-1042"></div>
+      <div><label for="intakeDate">Intake date</label><input id="intakeDate" type="date"></div>
+    </div>
+
+    <label for="notes" style="margin-top:16px">What's going on? <span class="hint">— staff notes, the client's own words, a form, any language</span></label>
+    <textarea id="notes" placeholder="Household, income, where they live, what they need, any deadlines (eviction date, shutoff notice)…"></textarea>
+
+    <div class="recorder">
+      <div class="row" style="margin-top:0; justify-content:space-between">
+        <h3>Record the conversation <span class="hint">— optional, alongside typed notes</span></h3>
+        <div class="row" style="margin-top:0">
+          <select id="recLang" style="width:auto" aria-label="Language spoken"></select>
+          <button class="rec-btn small" id="recBtn"><span class="rec-dot"></span><span id="recLabel">Start recording</span></button>
+          <span class="status" id="recTimer"></span>
+        </div>
+      </div>
+      <p class="hint" id="recHelp" style="margin:6px 0 0">Ask the client first. Pick the language they're speaking; Claude reads any language and answers staff in English.</p>
+      <div class="interim" id="interim"></div>
+      <div id="transcriptWrap" hidden>
+        <label for="transcript" style="margin-top:8px">Transcript <span class="hint">— edit anything misheard</span></label>
+        <textarea id="transcript" style="min-height:120px"></textarea>
+      </div>
+    </div>
+
+    <label class="hint" style="display:flex; gap:8px; align-items:flex-start; margin-top:14px; font-weight:400"><input type="checkbox" id="consent" style="margin-top:4px"> <span><b style="color:var(--ink)">The client agreed</b> to share this information with the programs we refer them to. Referral emails stay locked until this is checked.</span></label>
+    <div class="notice">Use an ID or initials, not the client's full name. Don't record Social Security numbers, immigration status or medical details; the screener never needs them.</div>
+
+    <div class="row">
+      <button class="primary" id="run">Screen this intake</button>
+      <button id="sample">Load sample intake</button>
+      <button id="demo">See demo result (no key needed)</button>
+      <span class="status" id="status" role="status"></span>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section id="results" hidden>
+    <div id="banners"></div>
+
+    <div class="panel">
+      <div class="row" style="margin-top:0; justify-content:space-between">
+        <h2 style="margin:0"><span id="resTitle">Intake</span> <span class="pill" id="priorityPill"></span> <span class="hint" id="resMeta"></span></h2>
+        <div class="btns noprint row" style="margin-top:0">
+          <button class="small" id="copySummary">Copy staff summary</button>
+          <button class="small" id="csvIntake">Intake CSV</button>
+        </div>
+      </div>
+      <p id="summary" style="margin:12px 0 0"></p>
+    </div>
+
+    <div class="panel">
+      <h2>Household facts <span class="hint">— fix anything Claude got wrong; eligibility updates instantly</span></h2>
+      <div class="facts" id="facts"></div>
+      <div class="flags" id="flags"></div>
+      <div class="fpl" id="fplLine"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Needs</h2>
+      <div id="needs"></div>
+    </div>
+
+    <div class="panel">
+      <div class="row" style="margin-top:0; justify-content:space-between">
+        <h2 style="margin:0">Program matches</h2>
+        <label class="hint" style="display:flex; gap:6px; align-items:center; margin:0; font-weight:400"><input type="checkbox" id="showNo"> Show programs that don't fit</label>
+      </div>
+      <p class="hint" style="margin:6px 0 0">Calculated by the page from your program rules. ✓ meets the rule · ✗ doesn't · ? information missing.</p>
+      <div id="matches"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Questions to ask next</h2>
+      <ol class="questions" id="questions"></ol>
+    </div>
+
+    <div class="panel noprint">
+      <h2>Case</h2>
+      <div class="grid4">
+        <div><label for="caseStatus">Status</label><select id="caseStatus"></select></div>
+        <div><label for="caseWorker">Caseworker</label><select id="caseWorker"></select></div>
+        <div><label for="followUp">Follow up by</label><input id="followUp" type="date"></div>
+        <div style="align-self:end"><button class="small" id="icsFollow" style="width:100%">Add follow-up to calendar</button></div>
+      </div>
+      <label for="caseNotes" style="margin-top:12px">Case notes</label>
+      <input id="caseNotes" type="text" placeholder="What was done, what's next">
+    </div>
+
+    <div class="panel" id="nextPanel">
+      <div class="row" style="margin-top:0; justify-content:space-between">
+        <h2 style="margin:0">Client next steps <span class="hint" id="nextMeta"></span></h2>
+        <div class="row noprint" style="margin-top:0">
+          <select id="nextLang" style="width:auto" aria-label="Client language"></select>
+          <button class="small primary" id="makeNext">Write next steps</button>
+        </div>
+      </div>
+      <p class="hint noprint" style="margin:6px 0 10px">A plain-language sheet for the client: who to contact, what to bring, and help lines. Edit before printing.</p>
+      <textarea id="nextText" placeholder="Click “Write next steps”."></textarea>
+      <div class="row noprint" style="margin-top:10px">
+        <button class="small" id="printNext">Print for client</button>
+        <button class="small" id="copyNext">Copy</button>
+        <button class="small" id="copySms">Copy short text-message version</button>
+      </div>
+    </div>
+
+    <div class="panel noprint">
+      <h2>Send</h2>
+      <div class="grid2">
+        <div class="card">
+          <h3>Staff</h3>
+          <p class="hint" style="margin:4px 0 0">Send the intake summary, matches and questions. Translated into each person's language if it isn't English.</p>
+          <div id="sendRows"></div>
+          <div class="row"><button class="small" id="addRecipient">+ Add someone</button></div>
+        </div>
+        <div class="card">
+          <h3>Referrals</h3>
+          <p class="hint" style="margin:4px 0 0" id="referNote"></p>
+          <div id="referRows"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Weekly digest -->
+  <section class="panel" id="digestPanel" hidden>
+    <div class="row" style="margin-top:0; justify-content:space-between">
+      <h2 style="margin:0">Weekly intake digest <span class="hint" id="digestMeta"></span></h2>
+    </div>
+    <div class="stats" id="digestStats" style="margin-top:12px"></div>
+    <div class="grid2" style="margin-top:16px">
+      <div><h3>Needs we heard</h3><table><tbody id="digestNeeds"></tbody></table></div>
+      <div><h3>Referrals by program</h3><table><tbody id="digestRefs"></tbody></table></div>
+    </div>
+    <div id="digestGaps"></div>
+    <div id="digestFollow"></div>
+    <div class="row noprint">
+      <button class="small primary" id="emailDigest">Email digest to supervisors</button>
+      <button class="small" id="copyDigest">Copy digest</button>
+      <button class="small" id="csvGaps">Unmet-needs CSV</button>
+      <button class="small" id="icsDigest">Add Monday reminder to my calendar</button>
+    </div>
+    <p class="hint" style="margin:10px 0 0">Covers intakes dated in the last 7 days. "Unmet needs" are needs where no program fit; they show where your community has gaps, which funders and grant reports often ask about.</p>
+  </section>
+
+  <footer id="footer">Built with the Claude API. Notes go straight from your browser to Anthropic's API. Eligibility is calculated by the page from your own program rules; always confirm with the program before promising a client anything.</footer>
+</div>
+
+<script>
+const MODEL = "claude-sonnet-5-5";
+
+/* ======================================================================
+   Reference data
+   ====================================================================== */
+/* 2026 HHS poverty guidelines: [one person, each additional person] */
+const FPL_2026 = { contiguous: [15960, 5680], alaska: [19950, 7100], hawaii: [18360, 6530] };
+const NEEDS = {
+  food: "Food", housing: "Housing / rent", utilities: "Utilities", employment: "Employment", legal: "Legal help",
+  health: "Health care", childcare: "Childcare", transportation: "Transportation", benefits: "Benefits enrollment",
+  education: "Education / training", safety: "Safety", other: "Other"
+};
+const FLAGS = { children: "Children under 18", senior: "Someone 60 or older", veteran: "Veteran", disability: "Disability", pregnant: "Pregnant" };
+const FLAG_Q = {
+  children: "Are there any children under 18 in the household?", senior: "Is anyone in the household 60 or older?",
+  veteran: "Has anyone in the household served in the military?", disability: "Does anyone in the household have a disability?",
+  pregnant: "Is anyone in the household pregnant?"
+};
+const PERIODS = { month: "per month", year: "per year", biweekly: "every 2 weeks", week: "per week" };
+const PER_YEAR = { month: 12, year: 1, biweekly: 26, week: 52 };
+const CASE_STATUS = { new: "New", progress: "In progress", referred: "Referred", waiting: "Waiting on client", enrolled: "Enrolled", closed_ineligible: "Closed: not eligible", closed: "Closed" };
+const REF_STATUS = { none: "Not referred", referred: "Referred", accepted: "Accepted", waitlist: "Waitlisted", enrolled: "Enrolled", declined: "Declined" };
+const ROLES = { intake: "Intake staff", caseworker: "Caseworker", supervisor: "Supervisor", other: "Other" };
+const LANGS = ["English", "Spanish", "Vietnamese", "Chinese (Simplified)", "Chinese (Traditional)", "Arabic", "Urdu", "Tagalog",
+  "French", "Haitian Creole", "Hindi", "Korean", "Portuguese", "Russian", "Swahili", "Pashto", "Dari", "Burmese"];
+const REC_LANGS = [["en-US", "English"], ["es-US", "Spanish"], ["vi-VN", "Vietnamese"], ["zh-CN", "Chinese (Mandarin)"],
+  ["ar-SA", "Arabic"], ["fr-FR", "French"], ["fil-PH", "Tagalog"], ["hi-IN", "Hindi"], ["ko-KR", "Korean"], ["pt-BR", "Portuguese"], ["ur-PK", "Urdu"]];
+const HELP_LINES = [
+  ["Local help with food, housing, bills and more", "Call 211"],
+  ["Emergency", "Call 911"]
+];
+const SAFETY_LINES = [
+  ["Emergency or immediate danger", "Call 911"],
+  ["988 Suicide & Crisis Lifeline", "Call or text 988"],
+  ["National Domestic Violence Hotline", "Call 1-800-799-7233 or text START to 88788"],
+  ["Local help with shelter, food and more", "Call 211"]
+];
+
+/* Example programs. Organizations replace these with their own. */
+const LIB = {
+  pantry:   { name: "Emergency Food Pantry", needs: ["food"], maxFpl: 200, zips: "", minAge: null, maxAge: null, requires: [], docs: "Photo ID, Proof of address", contact: "Pantry desk", email: "pantry@example.org", phone: "(555) 010-1001" },
+  snap:     { name: "SNAP Application Help", needs: ["food", "benefits"], maxFpl: 200, zips: "", minAge: null, maxAge: null, requires: [], docs: "Photo ID, Proof of income for the last 30 days, Proof of address", contact: "Benefits navigator", email: "benefits@example.org", phone: "(555) 010-1002" },
+  backpack: { name: "Kids' Weekend Food Backpacks", needs: ["food"], maxFpl: 200, zips: "", minAge: null, maxAge: null, requires: ["children"], docs: "Child's school name", contact: "Youth programs", email: "youth@example.org", phone: "(555) 010-1003" },
+  senior:   { name: "Senior Meal Delivery", needs: ["food"], maxFpl: null, zips: "", minAge: null, maxAge: null, requires: ["senior"], docs: "Photo ID", contact: "Senior services", email: "seniors@example.org", phone: "(555) 010-1004" },
+  rent:     { name: "Emergency Rent Assistance", needs: ["housing"], maxFpl: 200, zips: "77036, 77074, 77081, 77057", minAge: null, maxAge: null, requires: [], docs: "Lease, Eviction or late-rent notice, Proof of income, Photo ID", contact: "Housing team", email: "housing@example.org", phone: "(555) 010-1005" },
+  evict:    { name: "Eviction Defense Legal Clinic", needs: ["housing", "legal"], maxFpl: 125, zips: "", minAge: null, maxAge: null, requires: [], docs: "Eviction papers or notice, Lease, Any letters from the landlord", contact: "Legal intake", email: "legal@example.org", phone: "(555) 010-1006" },
+  shelter:  { name: "Emergency Shelter Referral", needs: ["housing", "safety"], maxFpl: null, zips: "", minAge: null, maxAge: null, requires: [], docs: "Photo ID if available", contact: "Shelter line", email: "shelter@example.org", phone: "(555) 010-1007" },
+  utility:  { name: "Utility Bill Assistance", needs: ["utilities"], maxFpl: 150, zips: "", minAge: null, maxAge: null, requires: [], docs: "Most recent utility bill or shutoff notice, Photo ID, Proof of income", contact: "Energy assistance", email: "energy@example.org", phone: "(555) 010-1008" },
+  jobs:     { name: "Job Readiness & Placement", needs: ["employment", "education"], maxFpl: null, zips: "", minAge: 18, maxAge: null, requires: [], docs: "Photo ID, Resume if you have one", contact: "Workforce center", email: "jobs@example.org", phone: "(555) 010-1009" },
+  childcare:{ name: "Childcare Subsidy Referral", needs: ["childcare", "employment"], maxFpl: 200, zips: "", minAge: null, maxAge: null, requires: ["children"], docs: "Proof of income, Children's birth certificates, Work or school schedule", contact: "Family services", email: "family@example.org", phone: "(555) 010-1010" },
+  transit:  { name: "Reduced-Fare Transit Pass", needs: ["transportation", "employment"], maxFpl: 150, zips: "", minAge: null, maxAge: null, requires: [], docs: "Photo ID, Proof of income", contact: "Front desk", email: "frontdesk@example.org", phone: "(555) 010-1011" },
+  clinic:   { name: "Free Clinic Visit", needs: ["health"], maxFpl: 200, zips: "", minAge: null, maxAge: null, requires: [], docs: "Photo ID, Proof of income", contact: "Clinic scheduling", email: "clinic@example.org", phone: "(555) 010-1012" },
+  rx:       { name: "Prescription Assistance", needs: ["health"], maxFpl: 250, zips: "", minAge: null, maxAge: null, requires: [], docs: "Prescription list, Proof of income", contact: "Pharmacy program", email: "rx@example.org", phone: "(555) 010-1013" },
+  insure:   { name: "Health Insurance Enrollment Help", needs: ["health", "benefits"], maxFpl: null, zips: "", minAge: null, maxAge: null, requires: [], docs: "Photo ID, Proof of income", contact: "Navigator", email: "navigator@example.org", phone: "(555) 010-1014" },
+  vets:     { name: "Veteran Services Referral", needs: ["benefits", "housing", "employment"], maxFpl: null, zips: "", minAge: null, maxAge: null, requires: ["veteran"], docs: "DD-214 if available", contact: "Veteran services", email: "vets@example.org", phone: "(555) 010-1015" },
+  debt:     { name: "Consumer & Debt Legal Clinic", needs: ["legal"], maxFpl: 200, zips: "", minAge: null, maxAge: null, requires: [], docs: "Any letters from creditors or courts", contact: "Legal intake", email: "legal@example.org", phone: "(555) 010-1006" }
+};
+const ORG_TYPES = {
+  multi:     { label: "Multi-service / community action agency", eyebrow: "Community services", programs: ["pantry", "snap", "backpack", "senior", "rent", "evict", "utility", "jobs", "childcare", "clinic"],
+    guidance: "This is a multi-service community agency helping with food, housing, utilities, jobs and family needs." },
+  food:      { label: "Food bank or pantry", eyebrow: "Food assistance", programs: ["pantry", "snap", "backpack", "senior"],
+    guidance: "This is a food bank or pantry. Pay attention to household size, children, seniors, dietary needs and whether the household has a way to cook." },
+  housing:   { label: "Housing or shelter", eyebrow: "Housing services", programs: ["rent", "evict", "shelter", "utility", "vets"],
+    guidance: "This is a housing organization. Eviction dates, notices to vacate, shutoff dates and whether the client has a safe place to sleep tonight are critical." },
+  legal:     { label: "Legal aid", eyebrow: "Legal aid intake", programs: ["evict", "debt", "snap"],
+    guidance: "This is a legal aid intake. Court dates, notice deadlines and the type of legal problem are critical. Do not give legal advice." },
+  workforce: { label: "Workforce or job training", eyebrow: "Workforce services", programs: ["jobs", "childcare", "transit", "snap"],
+    guidance: "This is a workforce program. Note current work, barriers to work (childcare, transportation, ID), skills and goals." },
+  health:    { label: "Community health clinic", eyebrow: "Clinic intake", programs: ["clinic", "rx", "insure", "snap"],
+    guidance: "This is a community health clinic's non-medical intake. Note coverage, cost barriers and social needs. Never record diagnoses or medical details." }
+};
+
+/* ======================================================================
+   Sample intake + demo extraction (what Claude would return for it)
+   ====================================================================== */
+const SAMPLE_NOTES = `Walk-in. Client MR, prefers Spanish (used interpreter line).
+Lives in apartment, ZIP 77036, with her 2 kids (6 and 9).
+Works part-time at a restaurant, about $1,900 a month, hours were just cut.
+Behind 2 months on rent. Landlord gave notice to vacate: has to be out in 5 days.
+Electric bill past due, shutoff notice for the end of the month.
+Food running low; kids get school lunch only.
+Car broke down, takes 2 buses to work, sometimes late.
+Wants more hours or a better-paying job.
+In her words: "No sé qué hacer, tengo miedo de quedarme en la calle con mis hijos."`;
+
+function demoExtraction(d) {
+  const add = (n) => { const x = new Date(d + "T12:00"); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+  const eom = (() => { const x = new Date(d + "T12:00"); return new Date(x.getFullYear(), x.getMonth() + 1, 0, 12).toISOString().slice(0, 10); })();
+  return {
+    summary: "Single mother of two (ages 6 and 9) facing eviction in 5 days after falling 2 months behind on rent when her restaurant hours were cut. Her electric bill is past due with a shutoff notice, food is running low, and a broken-down car makes getting to work hard. She prefers Spanish and wants more stable work.",
+    language: "Spanish",
+    facts: { household_size: 3, income_amount: 1900, income_period: "month", zip: "77036", age: null,
+      flags: { children: true, senior: false, veteran: null, disability: null, pregnant: null } },
+    needs: [
+      { category: "housing", detail: "2 months behind on rent; notice to vacate in 5 days", urgency: "urgent", deadline: add(5) },
+      { category: "utilities", detail: "Past-due electric bill with a shutoff notice", urgency: "soon", deadline: eom },
+      { category: "food", detail: "Food running low; children only get school lunch", urgency: "soon", deadline: null },
+      { category: "employment", detail: "Hours cut; wants more hours or a better-paying job", urgency: "routine", deadline: null },
+      { category: "transportation", detail: "Car broke down; takes 2 buses to work", urgency: "routine", deadline: null }
+    ],
+    safety: { concern: false, note: null },
+    follow_up_questions: ["Does she have a copy of the notice to vacate, and has a court date been set?", "Has she already applied for SNAP?"]
+  };
+}
+const DEMO_NEXT = {
+  lang: "Spanish",
+  sms: "Hola, soy de Servicios Comunitarios. Llame hoy al (555) 010-1005 para ayuda con la renta y al (555) 010-1006 para ayuda legal con el desalojo. Lleve su aviso de desalojo, contrato y prueba de ingresos.",
+  text: `Sus próximos pasos
+
+Hoy hablamos sobre la renta atrasada, el aviso para desalojar en 5 días, la factura de luz, la comida y el trabajo. Estamos aquí para ayudarle.
+
+1. Ayuda de emergencia para la renta. Llame HOY al (555) 010-1005 (Equipo de vivienda).
+   Lleve: contrato de renta, aviso de desalojo o de renta atrasada, prueba de ingresos e identificación con foto.
+
+2. Clínica legal contra desalojos. Llame HOY al (555) 010-1006. Le pueden ayudar antes de la fecha del aviso.
+   Lleve: el aviso o papeles de desalojo, su contrato y cartas del dueño.
+
+3. Ayuda con la factura de luz. Llame al (555) 010-1008 antes de la fecha de corte.
+   Lleve: la factura o aviso de corte, identificación y prueba de ingresos.
+
+4. Comida. Venga a la despensa de emergencia; llame al (555) 010-1001. También le podemos ayudar a pedir SNAP (estampillas de comida): (555) 010-1002. Pregunte por las mochilas de comida para el fin de semana para sus hijos: (555) 010-1003.
+
+5. Trabajo. El Centro de Empleo le ayuda a buscar más horas o un mejor trabajo: (555) 010-1009.
+
+Si necesita ayuda ahora mismo:
+- Llame al 211 para ayuda local con comida, vivienda y facturas.
+- En una emergencia, llame al 911.`
+};
+
+/* ======================================================================
+   Helpers + storage (everything stays in this browser)
+   ====================================================================== */
+const $ = (id) => document.getElementById(id);
+function readStore(k, f) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? f; } catch { return f; } }
+function writeStore(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } }
+function escapeHtml(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function setStatus(msg, err = false) { $("status").textContent = msg; $("status").classList.toggle("error", err); }
+function isoToday() { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+function validDate(s) { return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s); }
+function daysBetween(a, b) { return Math.round((Date.parse(b + "T12:00") - Date.parse(a + "T12:00")) / 864e5); }
+function prettyDate(iso) { return validDate(iso) ? new Date(iso + "T12:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }) : ""; }
+function money(n) { return "$" + Math.round(n).toLocaleString("en-US"); }
+function sameName(a, b) { return String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase(); }
+function csv(rows) { return rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n"); }
+function download(name, text, type = "text/csv") {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function copy(text, msg) { try { await navigator.clipboard.writeText(text); setStatus(msg); } catch { setStatus("Couldn't copy — your browser blocked clipboard access.", true); } }
+function openMail(to, subject, body) {
+  location.href = `mailto:${(to || "").split(",").map(x => encodeURIComponent(x.trim())).join(",").replace(/%40/g, "@")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+function slug() { return (org().name || "intake").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "intake"; }
+
+const PROG_KEY = "intake-programs-v1", PEOPLE_KEY = "intake-people-v1", INTAKES_KEY = "intake-history-v1", ORG_KEY = "intake-org-v1";
+let programs = readStore(PROG_KEY, null);
+let people = readStore(PEOPLE_KEY, []);
+let intakes = readStore(INTAKES_KEY, []);
+let current = null;   // { entry, data, isDemo }
+
+function org() { return { name: $("orgName").value.trim(), type: $("orgType").value, region: $("region").value }; }
+function saveOrg() { writeStore(ORG_KEY, org()); }
+function savePrograms() { writeStore(PROG_KEY, programs); }
+function savePeople() { writeStore(PEOPLE_KEY, people); }
+function saveIntakes() { writeStore(INTAKES_KEY, intakes); }
+function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function presetPrograms(type) { return (ORG_TYPES[type] || ORG_TYPES.multi).programs.map(k => ({ id: newId(), active: true, ...JSON.parse(JSON.stringify(LIB[k])) })); }
+function findPerson(name) { return people.find(p => sameName(p.name, name)); }
+function supervisors() { return people.filter(p => p.role === "supervisor" && p.email); }
+
+/* ======================================================================
+   Eligibility engine — the page decides, never the model
+   ====================================================================== */
+function guideline(size, region) {
+  const [base, add] = FPL_2026[region] || FPL_2026.contiguous;
+  return base + Math.max(0, size - 1) * add;
+}
+function annualIncome(f) {
+  if (typeof f.income_amount !== "number" || !isFinite(f.income_amount)) return null;
+  return f.income_amount * (PER_YEAR[f.income_period] || 12);
+}
+function fplPct(f, region) {
+  const a = annualIncome(f), n = f.household_size;
+  if (a === null || !(n >= 1)) return null;
+  return a / guideline(n, region) * 100;
+}
+function zipList(p) { return String(p.zips || "").split(/[\s,;]+/).map(z => z.trim()).filter(Boolean); }
+
+function evaluate(p, data, region) {
+  const f = data.facts, needCats = new Set((data.needs || []).map(n => n.category));
+  const relevant = (p.needs || []).some(n => needCats.has(n));
+  const reasons = [], missing = [];
+  const pass = (t) => reasons.push({ s: "pass", t }), fail = (t) => reasons.push({ s: "fail", t }), unk = (t, q) => { reasons.push({ s: "unknown", t }); missing.push(q); };
+
+  const hit = (p.needs || []).filter(n => needCats.has(n)).map(n => NEEDS[n].toLowerCase());
+  if (hit.length) pass(`Helps with ${hit.join(" and ")}`);
+  if (p.maxFpl !== null && p.maxFpl !== "" && p.maxFpl !== undefined) {
+    const pct = fplPct(f, region);
+    if (pct === null) unk(`Income limit: ${p.maxFpl}% of the poverty guideline; income or household size not known yet`, annualIncome(f) === null ? "income" : "size");
+    else if (pct <= p.maxFpl) pass(`Income is ${Math.round(pct)}% of the poverty guideline (limit ${p.maxFpl}%)`);
+    else fail(`Income is ${Math.round(pct)}% of the poverty guideline, over the ${p.maxFpl}% limit`);
+  }
+  const zips = zipList(p);
+  if (zips.length) {
+    if (!f.zip) unk(`Serves ZIP codes ${zips.join(", ")}; client's ZIP not known`, "zip");
+    else if (zips.includes(String(f.zip).trim())) pass(`ZIP ${f.zip} is in the service area`);
+    else fail(`ZIP ${f.zip} is outside the service area (${zips.join(", ")})`);
+  }
+  if (p.minAge != null || p.maxAge != null) {
+    const lim = p.minAge != null && p.maxAge != null ? `${p.minAge}–${p.maxAge}` : p.minAge != null ? `${p.minAge}+` : `up to ${p.maxAge}`;
+    if (typeof f.age !== "number") unk(`Age ${lim}; client's age not known`, "age");
+    else if ((p.minAge == null || f.age >= p.minAge) && (p.maxAge == null || f.age <= p.maxAge)) pass(`Age ${f.age} fits (${lim})`);
+    else fail(`Age ${f.age} is outside ${lim}`);
+  }
+  (p.requires || []).forEach(k => {
+    const v = f.flags?.[k];
+    if (v === true) pass(`${FLAGS[k]}: yes`);
+    else if (v === false) fail(`Requires: ${FLAGS[k].toLowerCase()}`);
+    else unk(`Requires: ${FLAGS[k].toLowerCase()} (not known yet)`, k);
+  });
+  const status = reasons.some(r => r.s === "fail") ? "no" : reasons.some(r => r.s === "unknown") ? "check" : "likely";
+  return { program: p, relevant, status, reasons, missing };
+}
+
+const Q_TEXT = {
+  income: "What is the household's total income before taxes, and how often is it paid?",
+  size: "How many people live in the household, including the client?",
+  zip: "What ZIP code does the client live in?",
+  age: "How old is the client?",
+  ...FLAG_Q
+};
+const RANK = { likely: 0, check: 1, no: 2 };
+const PRI_RANK = { urgent: 0, soon: 1, routine: 2 };
+
+function screen(data, intakeDate, region) {
+  // Most urgent need per category, so programs for urgent needs (like an eviction) come first
+  const catRank = {};
+  (data.needs || []).forEach(n => {
+    let r = PRI_RANK[n.urgency] ?? 2;
+    if (validDate(n.deadline)) { const d = daysBetween(intakeDate, n.deadline); if (d <= 7) r = 0; else if (d <= 21) r = Math.min(r, 1); }
+    catRank[n.category] = Math.min(catRank[n.category] ?? 2, r);
+  });
+  const urgencyOf = (p) => Math.min(2, ...(p.needs || []).map(c => catRank[c] ?? 2));
+  const results = programs.filter(p => p.active !== false).map(p => evaluate(p, data, region)).filter(r => r.relevant)
+    .sort((a, b) => RANK[a.status] - RANK[b.status] || urgencyOf(a.program) - urgencyOf(b.program) || a.program.name.localeCompare(b.program.name));
+  // Questions: only for programs that could still fit
+  const qs = [];
+  results.filter(r => r.status === "check").forEach(r => r.missing.forEach(m => { if (!qs.some(q => q.key === m)) qs.push({ key: m, text: Q_TEXT[m], why: [] }); }));
+  qs.forEach(q => q.why = results.filter(r => r.status === "check" && r.missing.includes(q.key)).map(r => r.program.name));
+  (data.follow_up_questions || []).slice(0, 4).forEach(t => qs.push({ key: "claude", text: t, why: [] }));
+  // Priority: the more urgent of what Claude heard and what the deadlines say
+  let pri = "routine";
+  const needs = (data.needs || []).map(n => {
+    let u = PRI_RANK[n.urgency] !== undefined ? n.urgency : "routine";
+    let days = null;
+    if (validDate(n.deadline)) { days = daysBetween(intakeDate, n.deadline); if (days <= 7) u = "urgent"; else if (days <= 21 && u === "routine") u = "soon"; }
+    if (PRI_RANK[u] < PRI_RANK[pri]) pri = u;
+    const fits = results.filter(r => r.status !== "no" && (r.program.needs || []).includes(n.category));
+    return { ...n, urgencyCalc: u, days, fits };
+  });
+  if (data.safety?.concern) pri = "urgent";
+  const unmet = needs.filter(n => !n.fits.length);
+  return { results, questions: qs, priority: pri, needs, unmet, fpl: fplPct(data.facts, region) };
+}
+
+/* ======================================================================
+   Program editor
+   ====================================================================== */
+function renderPrograms() {
+  $("programs").innerHTML = programs.map((p, i) => `<div class="prog-card ${p.active === false ? "off" : ""}" data-i="${i}">
+    <div class="row" style="margin-top:0; justify-content:space-between">
+      <input type="text" data-f="name" value="${escapeHtml(p.name)}" aria-label="Program name" style="max-width:360px; font-weight:700">
+      <div class="row" style="margin-top:0">
+        <label class="hint" style="display:flex; gap:6px; align-items:center; margin:0; font-weight:400"><input type="checkbox" data-f="active" ${p.active !== false ? "checked" : ""}> Active</label>
+        <button class="x" data-del="${i}" aria-label="Delete program">×</button>
+      </div>
+    </div>
+    <div class="chips" style="margin-top:8px">${Object.entries(NEEDS).map(([k, v]) => `<label><input type="checkbox" data-need="${k}" ${p.needs.includes(k) ? "checked" : ""}> ${v}</label>`).join("")}</div>
+    <div class="prog-grid">
+      <div><label>Max income (% of poverty guideline)</label><input type="number" min="0" step="5" data-f="maxFpl" value="${p.maxFpl ?? ""}" placeholder="no limit"></div>
+      <div><label>ZIP codes served</label><input type="text" data-f="zips" value="${escapeHtml(p.zips)}" placeholder="any"></div>
+      <div><label>Min age</label><input type="number" min="0" data-f="minAge" value="${p.minAge ?? ""}" placeholder="none"></div>
+      <div><label>Max age</label><input type="number" min="0" data-f="maxAge" value="${p.maxAge ?? ""}" placeholder="none"></div>
+    </div>
+    <div class="chips" style="margin-top:8px"><span class="hint" style="align-self:center">Requires:</span>${Object.entries(FLAGS).map(([k, v]) => `<label><input type="checkbox" data-req="${k}" ${p.requires.includes(k) ? "checked" : ""}> ${v}</label>`).join("")}</div>
+    <div class="prog-grid">
+      <div style="grid-column: span 2"><label>Documents to bring</label><input type="text" data-f="docs" value="${escapeHtml(p.docs)}" placeholder="comma-separated"></div>
+      <div><label>Contact</label><input type="text" data-f="contact" value="${escapeHtml(p.contact)}"></div>
+      <div><label>Phone</label><input type="tel" data-f="phone" value="${escapeHtml(p.phone)}"></div>
+      <div style="grid-column: span 2"><label>Referral email</label><input type="email" data-f="email" value="${escapeHtml(p.email)}"></div>
+    </div></div>`).join("") || '<p class="hint">No programs yet.</p>';
+  setupSummary();
+}
+$("programs").addEventListener("change", (e) => {
+  const card = e.target.closest(".prog-card"); if (!card) return;
+  const p = programs[Number(card.dataset.i)], d = e.target.dataset;
+  if (d.need) p.needs = e.target.checked ? [...new Set([...p.needs, d.need])] : p.needs.filter(n => n !== d.need);
+  else if (d.req) p.requires = e.target.checked ? [...new Set([...p.requires, d.req])] : p.requires.filter(n => n !== d.req);
+  else if (d.f === "active") { p.active = e.target.checked; card.classList.toggle("off", !p.active); }
+  else if (["maxFpl", "minAge", "maxAge"].includes(d.f)) p[d.f] = e.target.value === "" ? null : Number(e.target.value);
+  else if (d.f) p[d.f] = e.target.value.trim();
+  savePrograms(); setupSummary(); if (current) renderScreen();
+});
+$("programs").addEventListener("click", (e) => {
+  const i = e.target.dataset.del; if (i === undefined) return;
+  if (!confirm(`Delete "${programs[Number(i)].name}"?`)) return;
+  programs.splice(Number(i), 1); savePrograms(); renderPrograms(); if (current) renderScreen();
+});
+$("addProgram").addEventListener("click", () => {
+  programs.push({ id: newId(), active: true, name: "New program", needs: [], maxFpl: null, zips: "", minAge: null, maxAge: null, requires: [], docs: "", contact: "", email: "", phone: "" });
+  savePrograms(); renderPrograms();
+  const ins = $("programs").querySelectorAll("input[data-f=name]"); ins[ins.length - 1]?.select();
+});
+$("resetPrograms").addEventListener("click", () => {
+  if (programs.length && !confirm("Replace your programs with the example set for this organization type?")) return;
+  programs = presetPrograms($("orgType").value); savePrograms(); renderPrograms(); if (current) renderScreen();
+  setStatus("Example programs loaded. Edit them to match your real programs.");
+});
+
+/* ======================================================================
+   Staff roster
+   ====================================================================== */
+function langOptions(sel) { return LANGS.map(l => `<option ${l === (sel || "English") ? "selected" : ""}>${escapeHtml(l)}</option>`).join(""); }
+function renderPeople() {
+  $("people").innerHTML = people.length ? people.map((p, i) => `<div class="person-row" data-i="${i}">
+      <input type="text" data-f="name" value="${escapeHtml(p.name)}" placeholder="Name" aria-label="Name">
+      <input type="email" data-f="email" value="${escapeHtml(p.email)}" placeholder="email@example.org" aria-label="Email">
+      <select data-f="language" aria-label="Language">${langOptions(p.language)}</select>
+      <select data-f="role" aria-label="Role">${Object.entries(ROLES).map(([k, v]) => `<option value="${k}" ${k === p.role ? "selected" : ""}>${v}</option>`).join("")}</select>
+      <button class="x" data-remove="${i}" aria-label="Remove">×</button></div>`).join("")
+    : '<p class="hint" style="margin:6px 0 0">No staff added yet.</p>';
+  setupSummary(); if (current) { renderCaseworkers(); }
+}
+function setupSummary() {
+  const n = programs.filter(p => p.active !== false).length;
+  $("progCount").textContent = `— ${n} active`;
+  $("setupSummary").textContent = `— ${n} program${n === 1 ? "" : "s"} · ${people.length} staff · ${intakes.length} saved intake${intakes.length === 1 ? "" : "s"}`;
+}
+$("people").addEventListener("change", (e) => {
+  const row = e.target.closest(".person-row"); if (!row) return;
+  const p = people[Number(row.dataset.i)], f = e.target.dataset.f;
+  p[f] = f === "name" ? (e.target.value.trim() || p.name) : e.target.value.trim();
+  savePeople(); setupSummary(); if (current) { renderCaseworkers(); } renderDigest();
+});
+$("people").addEventListener("click", (e) => {
+  if (e.target.dataset.remove === undefined) return;
+  people.splice(Number(e.target.dataset.remove), 1); savePeople(); renderPeople(); renderDigest();
+});
+$("addPerson").addEventListener("click", () => {
+  people.push({ name: "", email: "", language: "English", role: people.some(p => p.role === "supervisor") ? "caseworker" : "supervisor" });
+  savePeople(); renderPeople();
+  const ins = $("people").querySelectorAll("input[data-f=name]"); ins[ins.length - 1]?.focus();
+});
+function upsertPerson(name, fields) {
+  let p = findPerson(name); const isNew = !p;
+  if (isNew) { p = { name, email: "", language: "English", role: "other" }; people.push(p); }
+  Object.assign(p, fields); savePeople();
+  if (isNew) renderPeople(); else setupSummary();
+  return p;
+}
+
+/* ======================================================================
+   Claude
+   ====================================================================== */
+async function callClaude(key, system, content, maxTokens) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: "user", content }] })
+  });
+  const body = await res.json();
+  if (!res.ok) throw new Error(body?.error?.message || `API error (${res.status})`);
+  return (body.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+}
+function parseJson(text) {
+  const a = text.indexOf("{"), z = text.lastIndexOf("}");
+  if (a < 0 || z < 0) throw new Error("Claude didn't return structured data. Try again.");
+  return JSON.parse(text.slice(a, z + 1));
+}
+function buildPrompt(intakeDate) {
+  const o = org(), t = ORG_TYPES[o.type] || ORG_TYPES.multi;
+  return `You read nonprofit client intake notes and conversation transcripts, in any language, and extract the facts a caseworker needs. You do NOT decide eligibility; the app checks the facts against the organization's program rules.
+
+Context: ${t.guidance}${o.name ? ` Organization: ${o.name}.` : ""}
+Intake date: ${intakeDate}. Convert relative dates ("in 5 days", "Friday", "end of the month") to calendar dates from it.
+
+Return ONLY a JSON object, no prose and no code fences:
+{
+  "summary": string (2-4 sentences in English for staff: who, what happened, what they need most),
+  "language": string (the client's preferred language in English, e.g. "Spanish"; "English" if unclear),
+  "facts": {
+    "household_size": integer or null (everyone living together, including the client),
+    "income_amount": number or null (total household income before taxes, as stated),
+    "income_period": "month" | "year" | "biweekly" | "week" | null,
+    "zip": string or null,
+    "age": integer or null (the client's age),
+    "flags": { "children": true|false|null, "senior": true|false|null, "veteran": true|false|null, "disability": true|false|null, "pregnant": true|false|null }
+  },
+  "needs": [ { "category": ${Object.keys(NEEDS).map(k => `"${k}"`).join(" | ")}, "detail": string (one short English sentence), "urgency": "urgent" | "soon" | "routine", "deadline": "YYYY-MM-DD" or null } ],
+  "safety": { "concern": true | false, "note": string or null },
+  "follow_up_questions": [ string ] (at most 3, only things a caseworker truly needs and that the notes don't answer)
+}
+Rules:
+- Never guess. If a fact isn't stated, use null. "children" means anyone under 18 in the household; "senior" means anyone 60 or older.
+- If income is stated as a range or estimate, use the stated figure. If income is zero, use 0. If only hourly pay is given, leave income null and ask about it.
+- urgency: "urgent" = could lose housing, utilities, food or safety within about a week; "soon" = within a few weeks; otherwise "routine".
+- safety.concern is true only for danger to someone: violence or abuse at home, thoughts of self-harm, no safe place to sleep tonight, or a child at risk. Keep the note short and factual.
+- Do not record or ask about immigration status, Social Security numbers, criminal history, or medical diagnoses. Do not repeat the client's full name; use "the client".`;
+}
+
+async function screenIntake() {
+  const key = $("key").value.trim(), notes = $("notes").value.trim(), tr = $("transcript").value.trim();
+  const intakeDate = $("intakeDate").value || isoToday();
+  if (!key) return setStatus("Add your Claude API key first, or try the demo.", true);
+  if (!notes && !tr) return setStatus("Type some notes or record the conversation first.", true);
+  if (Recorder.active) Recorder.stop();
+  $("run").disabled = true; setStatus("Reading the intake…");
+  try {
+    const parts = []; if (notes) parts.push(`Staff notes:\n${notes}`); if (tr) parts.push(`Conversation transcript (automatic speech recognition, may contain errors):\n${tr}`);
+    const data = parseJson(await callClaude(key, buildPrompt(intakeDate), parts.join("\n\n---\n\n"), 3000));
+    normalize(data);
+    const entry = { id: newId(), date: intakeDate, label: $("clientLabel").value.trim() || "Client", consent: $("consent").checked, savedAt: new Date().toISOString(),
+      data, referrals: {}, status: "new", caseworker: "", followUp: "", notes: "", next: null, extras: [] };
+    intakes.unshift(entry); saveIntakes();
+    openIntake(entry, false);
+    setStatus(`Screened. ${current.s.results.filter(r => r.status === "likely").length} likely program match${current.s.results.filter(r => r.status === "likely").length === 1 ? "" : "es"}. Saved in this browser.`);
+  } catch (e) { setStatus(e.message || "Something went wrong.", true); }
+  finally { $("run").disabled = false; }
+}
+function normalize(d) {
+  d.facts = d.facts || {}; d.facts.flags = d.facts.flags || {};
+  Object.keys(FLAGS).forEach(k => { if (![true, false].includes(d.facts.flags[k])) d.facts.flags[k] = null; });
+  if (!PER_YEAR[d.facts.income_period]) d.facts.income_period = d.facts.income_amount != null ? "month" : null;
+  d.needs = (d.needs || []).filter(n => NEEDS[n.category]);
+  d.safety = d.safety || { concern: false, note: null };
+  const CODES = { en: "English", es: "Spanish", vi: "Vietnamese", zh: "Chinese (Simplified)", ar: "Arabic", ur: "Urdu", tl: "Tagalog", fil: "Tagalog", fr: "French", ht: "Haitian Creole",
+    hi: "Hindi", ko: "Korean", pt: "Portuguese", ru: "Russian", sw: "Swahili", ps: "Pashto", fa: "Dari", prs: "Dari", my: "Burmese", "español": "Spanish", mandarin: "Chinese (Simplified)", cantonese: "Chinese (Traditional)", chinese: "Chinese (Simplified)" };
+  const raw = String(d.language || "").trim().toLowerCase();
+  if (!LANGS.includes(d.language)) d.language = CODES[raw] || CODES[raw.split(/[-_]/)[0]] || LANGS.find(l => raw && l.toLowerCase().startsWith(raw)) || "English";
+}
+
+/* ======================================================================
+   Show an intake
+   ====================================================================== */
+function openIntake(entry, isDemo) {
+  current = { entry, data: entry.data, isDemo };
+  $("clientLabel").value = entry.label; $("intakeDate").value = entry.date; $("consent").checked = !!entry.consent;
+  renderResults();
+  $("results").hidden = false;
+  $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+  renderHistory(); renderDigest();
+}
+function persist() { if (!current.isDemo) { saveIntakes(); renderHistory(); renderDigest(); } }
+
+function renderResults() {
+  renderFacts();
+  renderScreen();
+  renderCase();
+  renderNext();
+  renderSend();
+}
+function renderScreen() {
+  const { entry, data } = current, region = $("region").value;
+  const s = current.s = screen(data, entry.date, region);
+  // Banners
+  let b = "";
+  if (data.safety?.concern) b += `<div class="banner safety"><h3>Safety concern</h3><div>${escapeHtml(data.safety.note || "A safety concern came up in this intake.")} Follow your organization's safety protocol.</div>
+      <ul>${SAFETY_LINES.map(([a, c]) => `<li><b>${escapeHtml(a)}:</b> ${escapeHtml(c)}</li>`).join("")}</ul></div>`;
+  const urgent = s.needs.filter(n => n.urgencyCalc === "urgent");
+  if (urgent.length) b += `<div class="banner urgent"><h3>Urgent: act today</h3><ul>${urgent.map(n => `<li><b>${escapeHtml(NEEDS[n.category])}:</b> ${escapeHtml(n.detail)}${n.days !== null ? ` <b>(${n.days <= 0 ? "due now" : `${n.days} day${n.days === 1 ? "" : "s"} left`})</b>` : ""}</li>`).join("")}</ul></div>`;
+  $("banners").innerHTML = b;
+  // Header
+  const o = org();
+  $("resTitle").textContent = `${entry.label}`;
+  $("priorityPill").className = `pill pr-${s.priority}`; $("priorityPill").textContent = { urgent: "Urgent", soon: "Soon", routine: "Routine" }[s.priority];
+  $("resMeta").textContent = `— ${prettyDate(entry.date)}${data.language && data.language !== "English" ? ` · prefers ${data.language}` : ""}${current.isDemo ? " · demo" : ""}`;
+  $("summary").textContent = data.summary || "";
+  // FPL line
+  const f = data.facts, a = annualIncome(f);
+  $("fplLine").innerHTML = s.fpl === null
+    ? `<span class="hint">Add household size and income to calculate the poverty-guideline percentage.</span>`
+    : `Annual income ${money(a)} for a household of ${f.household_size} = <b>${Math.round(s.fpl)}%</b> of the 2026 poverty guideline (${money(guideline(f.household_size, region))}).`;
+  // Needs
+  $("needs").innerHTML = s.needs.length ? s.needs.map(n => `<div class="need">
+      <div class="cat">${escapeHtml(NEEDS[n.category])}</div>
+      <div style="flex:1">${escapeHtml(n.detail)}${validDate(n.deadline) ? ` <span class="hint">· by ${escapeHtml(prettyDate(n.deadline))}</span>` : ""}
+        <div class="src">${n.fits.length ? `Covered by: ${n.fits.map(r => escapeHtml(r.program.name)).join(", ")}` : '<span class="r-fail">No program fits this need (recorded as an unmet need)</span>'}</div></div>
+      <span class="pill pr-${n.urgencyCalc}">${{ urgent: "Urgent", soon: "Soon", routine: "Routine" }[n.urgencyCalc]}</span></div>`).join("")
+    : '<p class="hint" style="margin:0">No needs found.</p>';
+  // Matches
+  const showNo = $("showNo").checked, noCount = s.results.filter(r => r.status === "no").length;
+  $("showNo").parentElement.lastChild.textContent = ` Show ${noCount} program${noCount === 1 ? " that doesn't" : "s that don't"} fit`;
+  const shown = s.results.filter(r => showNo || r.status !== "no");
+  $("matches").innerHTML = shown.length ? shown.map(r => {
+    const p = r.program, ref = entry.referrals[p.id]?.status || "none";
+    return `<div class="match ${r.status === "no" ? "no" : ""}">
+      <div class="match-head"><h3>${escapeHtml(p.name)} <span class="pill p-${r.status}">${{ likely: "Likely eligible", check: "Check: info missing", no: "Doesn't fit" }[r.status]}</span></h3>
+        ${p.phone || p.contact ? `<span class="hint">${escapeHtml(p.contact)}${p.phone ? ` · ${escapeHtml(p.phone)}` : ""}</span>` : ""}</div>
+      <ul class="reasons">${r.reasons.map(x => `<li class="r-${x.s}">${x.s === "pass" ? "✓" : x.s === "fail" ? "✗" : "?"} ${escapeHtml(x.t)}</li>`).join("")}</ul>
+      ${p.docs && r.status !== "no" ? `<div class="docs"><b>Bring:</b> ${escapeHtml(p.docs)}</div>` : ""}
+      ${r.status !== "no" ? `<div class="refer noprint"><span class="hint">Referral:</span><select data-ref="${p.id}" aria-label="Referral status for ${escapeHtml(p.name)}">${Object.entries(REF_STATUS).map(([k, v]) => `<option value="${k}" ${k === ref ? "selected" : ""}>${v}</option>`).join("")}</select></div>` : ""}
+    </div>`;
+  }).join("") : '<p class="hint" style="margin:10px 0 0">None of your active programs cover these needs. Add programs under "Organization, programs &amp; team".</p>';
+  // Questions
+  $("questions").innerHTML = s.questions.length ? s.questions.map(q => `<li>${escapeHtml(q.text)}${q.why.length ? `<div class="src">Needed for: ${escapeHtml(q.why.join(", "))}</div>` : q.key === "claude" ? '<div class="src">Suggested by Claude</div>' : ""}</li>`).join("")
+    : '<li class="hint" style="list-style:none; margin-left:-22px">Nothing missing for the programs that fit.</li>';
+  renderReferRows();
+}
+$("matches").addEventListener("change", (e) => {
+  const id = e.target.dataset.ref; if (!id) return;
+  current.entry.referrals[id] = { status: e.target.value, at: new Date().toISOString() };
+  if (e.target.value !== "none" && current.entry.status === "new") { current.entry.status = "referred"; $("caseStatus").value = "referred"; }
+  persist(); renderReferRows();
+  setStatus(`Referral marked "${REF_STATUS[e.target.value]}".${current.isDemo ? " (Demo changes aren't saved.)" : ""}`);
+});
+$("showNo").addEventListener("change", renderScreen);
+
+/* Household facts — editing reruns eligibility without redrawing the inputs */
+function renderFacts() {
+  const f = current.data.facts;
+  $("facts").innerHTML = `
+    <div><label for="fSize">Household size</label><input id="fSize" type="number" min="1" max="20" data-fact="household_size" value="${f.household_size ?? ""}"></div>
+    <div><label for="fIncome">Household income</label><input id="fIncome" type="number" min="0" step="1" data-fact="income_amount" value="${f.income_amount ?? ""}" placeholder="unknown"></div>
+    <div><label for="fPeriod">How often</label><select id="fPeriod" data-fact="income_period">${Object.entries(PERIODS).map(([k, v]) => `<option value="${k}" ${k === (f.income_period || "month") ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+    <div><label for="fZip">ZIP code</label><input id="fZip" type="text" inputmode="numeric" maxlength="10" data-fact="zip" value="${escapeHtml(f.zip ?? "")}"></div>
+    <div><label for="fAge">Client's age</label><input id="fAge" type="number" min="0" max="120" data-fact="age" value="${f.age ?? ""}" placeholder="unknown"></div>`;
+  $("flags").innerHTML = Object.entries(FLAGS).map(([k, v]) => `<label>${escapeHtml(v)}
+      <select data-flag="${k}"><option value="" ${f.flags[k] == null ? "selected" : ""}>?</option><option value="yes" ${f.flags[k] === true ? "selected" : ""}>Yes</option><option value="no" ${f.flags[k] === false ? "selected" : ""}>No</option></select></label>`).join("");
+}
+function onFact(e) {
+  const f = current.data.facts, d = e.target.dataset;
+  if (d.fact) {
+    const v = e.target.value.trim();
+    if (["household_size", "income_amount", "age"].includes(d.fact)) f[d.fact] = v === "" ? null : Number(v);
+    else f[d.fact] = v === "" ? null : v;
+    if (d.fact === "income_amount" && f.income_amount !== null && !f.income_period) f.income_period = $("fPeriod").value;
+  }
+  if (d.flag) f.flags[d.flag] = e.target.value === "yes" ? true : e.target.value === "no" ? false : null;
+  persist(); renderScreen(); renderSend();
+  setStatus(`Eligibility updated.${current.isDemo ? " (Demo changes aren't saved.)" : ""}`);
+}
+$("facts").addEventListener("change", onFact);
+$("flags").addEventListener("change", onFact);
+
+/* Case panel */
+function renderCaseworkers() {
+  const e = current.entry;
+  $("caseWorker").innerHTML = `<option value="">Unassigned</option>` + people.filter(p => p.name).map(p => `<option ${sameName(p.name, e.caseworker) ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("");
+}
+function renderCase() {
+  const e = current.entry;
+  $("caseStatus").innerHTML = Object.entries(CASE_STATUS).map(([k, v]) => `<option value="${k}" ${k === e.status ? "selected" : ""}>${v}</option>`).join("");
+  renderCaseworkers();
+  $("followUp").value = e.followUp || ""; $("caseNotes").value = e.notes || "";
+}
+$("caseStatus").addEventListener("change", () => { current.entry.status = $("caseStatus").value; persist(); });
+$("caseWorker").addEventListener("change", () => { current.entry.caseworker = $("caseWorker").value; persist(); renderSend(); });
+$("followUp").addEventListener("change", () => { current.entry.followUp = $("followUp").value; persist(); });
+$("caseNotes").addEventListener("change", () => { current.entry.notes = $("caseNotes").value.trim(); persist(); });
+$("consent").addEventListener("change", () => { if (current) { current.entry.consent = $("consent").checked; persist(); renderReferRows(); } });
+$("icsFollow").addEventListener("click", () => {
+  const e = current?.entry; if (!e) return;
+  const d = e.followUp || (() => { const x = new Date(); x.setDate(x.getDate() + 7); return x.toISOString().slice(0, 10); })();
+  if (!e.followUp) { e.followUp = d; $("followUp").value = d; persist(); }
+  const open = current.s.results.filter(r => r.status !== "no").map(r => `- ${r.program.name}: ${REF_STATUS[e.referrals[r.program.id]?.status || "none"]}`).join("\n");
+  ics(`${slug()}-followup-${e.label}.ics`, d.replace(/-/g, ""), null, `Follow up: client ${e.label}`, `Check on referrals for client ${e.label} (intake ${e.date}):\n${open}\n\nNotes: ${e.notes || "none"}`);
+  setStatus(`Follow-up for ${prettyDate(d)} downloaded. Open it to add it to your calendar.`);
+});
+function ics(file, dateBasic, rrule, summary, desc) {
+  const esc = (s) => String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+  download(file, ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Intake Screener//EN", "BEGIN:VEVENT", `UID:${newId()}@intake-screener`, `DTSTAMP:${stamp}`,
+    `DTSTART:${dateBasic}T090000`, "DURATION:PT15M", ...(rrule ? [rrule] : []), `SUMMARY:${esc(summary)}`, `DESCRIPTION:${esc(desc)}`,
+    "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${esc(summary)}`, "TRIGGER:PT0M", "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n"), "text/calendar");
+}
+
+/* ======================================================================
+   Client next steps (in the client's language)
+   ====================================================================== */
+function fitPrograms() { return current.s.results.filter(r => r.status !== "no"); }
+function renderNext() {
+  const n = current.entry.next;
+  $("nextLang").innerHTML = langOptions(n?.lang || current.data.language || "English");
+  $("nextText").value = n?.text || "";
+  $("nextMeta").textContent = n ? `— ${n.lang}` : "";
+}
+function nextTemplate() {
+  const o = org(), d = current.data;
+  const lines = [`Your next steps${o.name ? ` with ${o.name}` : ""}`, "", "Here is what we talked about and what to do next.", ""];
+  fitPrograms().forEach((r, i) => {
+    const p = r.program;
+    lines.push(`${i + 1}. ${p.name}. Contact ${p.contact || "the program"}${p.phone ? ` at ${p.phone}` : ""}.`);
+    if (p.docs) lines.push(`   Bring: ${p.docs}.`);
+    lines.push("");
+  });
+  if (!fitPrograms().length) lines.push("We'll call you about other places that can help.", "");
+  lines.push("If you need help right away:");
+  (d.safety?.concern ? SAFETY_LINES : HELP_LINES).forEach(([a, b]) => lines.push(`- ${a}: ${b}`));
+  return lines.join("\n");
+}
+async function makeNext() {
+  const lang = $("nextLang").value, key = $("key").value.trim();
+  if (current.isDemo && !key && lang === DEMO_NEXT.lang) { current.entry.next = { ...DEMO_NEXT }; renderNext(); return setStatus("Showing the demo's Spanish next steps."); }
+  if (!key) {
+    current.entry.next = { lang: "English", text: nextTemplate(), sms: "" }; persist(); renderNext();
+    return setStatus(lang === "English" ? "Next steps written from a template. Add an API key for a fuller, friendlier version." : `Add your API key to write next steps in ${lang}. An English template was written instead.`, lang !== "English");
+  }
+  $("makeNext").disabled = true; setStatus(`Writing next steps in ${lang}…`);
+  const o = org(), d = current.data;
+  const progs = fitPrograms().map(r => ({ name: r.program.name, status: r.status === "likely" ? "likely eligible" : "may be eligible; staff still checking", contact: r.program.contact, phone: r.program.phone, bring: r.program.docs }));
+  const urgent = current.s.needs.filter(n => n.urgencyCalc === "urgent").map(n => `${n.detail}${validDate(n.deadline) ? ` (by ${n.deadline})` : ""}`);
+  const sys = `You write a short, warm next-steps sheet for a nonprofit's client, written directly in ${lang}, at about a 6th-grade reading level.
+Use only the programs, phone numbers and documents provided. Never promise the client will get help: say a program "may be able to help". Put urgent items first and say to call today. Don't include the client's name or income.
+Include, in this order: a one-sentence opening; numbered steps (one per program: what it may help with, who to call and the number, what to bring); then a "If you need help right away" section with exactly these lines: ${(d.safety?.concern ? SAFETY_LINES : HELP_LINES).map(([a, b]) => `${a}: ${b}`).join("; ")}.
+Plain text only, no markdown symbols.
+Also write a text-message version under 300 characters with the single most important next step and its phone number.
+Return ONLY JSON: {"sheet": string, "sms": string}`;
+  const facts = `Organization: ${o.name || "our organization"}\nIntake date: ${current.entry.date}\nNeeds: ${d.needs.map(n => n.detail).join("; ")}\nUrgent: ${urgent.join("; ") || "none"}\nPrograms: ${JSON.stringify(progs)}`;
+  try {
+    const out = parseJson(await callClaude(key, sys, facts, 2500));
+    current.entry.next = { lang, text: String(out.sheet || "").trim(), sms: String(out.sms || "").trim() };
+    persist(); renderNext(); setStatus(`Next steps written in ${lang}. Read them over before giving them to the client.`);
+  } catch (e) { setStatus(e.message, true); }
+  finally { $("makeNext").disabled = false; }
+}
+$("makeNext").addEventListener("click", () => current && makeNext());
+$("nextText").addEventListener("change", () => { if (!current) return; if (!current.entry.next) current.entry.next = { lang: $("nextLang").value, text: "", sms: "" }; current.entry.next.text = $("nextText").value; persist(); });
+$("printNext").addEventListener("click", () => { if (!$("nextText").value.trim()) return setStatus("Write the next steps first.", true); $("nextText").style.height = $("nextText").scrollHeight + "px"; window.print(); $("nextText").style.height = ""; });
+$("copyNext").addEventListener("click", () => copy($("nextText").value, "Next steps copied."));
+$("copySms").addEventListener("click", () => {
+  const sms = current?.entry.next?.sms;
+  if (sms) return copy(sms, `Text-message version copied (${sms.length} characters).`);
+  const top = fitPrograms()[0]?.program;
+  copy(top ? `Next step: call ${top.contact || top.name}${top.phone ? ` at ${top.phone}` : ""} about ${top.name}.${top.docs ? ` Bring: ${top.docs}.` : ""}` : "We'll call you soon about next steps. For help now, call 211.", "Short text-message version copied.");
+});
+
+/* ======================================================================
+   Sending: staff (translated) and referrals (only with consent)
+   ====================================================================== */
+function staffText() {
+  const e = current.entry, d = current.data, s = current.s, f = d.facts;
+  const L = [`Intake: client ${e.label} — ${prettyDate(e.date)} — priority ${s.priority.toUpperCase()}`, "", d.summary || "", "",
+    `Household: ${f.household_size ?? "?"} people · income ${f.income_amount != null ? `${money(f.income_amount)} ${PERIODS[f.income_period] || ""}` : "unknown"}${s.fpl !== null ? ` (${Math.round(s.fpl)}% of poverty guideline)` : ""} · ZIP ${f.zip || "?"} · prefers ${d.language || "English"}`, "", "NEEDS"];
+  s.needs.forEach(n => L.push(`- [${n.urgencyCalc.toUpperCase()}] ${NEEDS[n.category]}: ${n.detail}${validDate(n.deadline) ? ` (by ${n.deadline})` : ""}`));
+  L.push("", "PROGRAMS");
+  s.results.filter(r => r.status !== "no").forEach(r => L.push(`- ${r.program.name}: ${r.status === "likely" ? "likely eligible" : "check: info missing"}; referral ${REF_STATUS[e.referrals[r.program.id]?.status || "none"].toLowerCase()}`));
+  if (s.unmet.length) { L.push("", "UNMET NEEDS (no program fits)"); s.unmet.forEach(n => L.push(`- ${NEEDS[n.category]}: ${n.detail}`)); }
+  if (s.questions.length) { L.push("", "QUESTIONS TO ASK NEXT"); s.questions.forEach(q => L.push(`- ${q.text}`)); }
+  if (d.safety?.concern) L.push("", `SAFETY CONCERN: ${d.safety.note || "see intake"}`);
+  L.push("", `Case status: ${CASE_STATUS[e.status]}${e.caseworker ? ` · caseworker ${e.caseworker}` : ""}${e.followUp ? ` · follow up by ${e.followUp}` : ""}`);
+  return L.join("\n");
+}
+function sendList() {
+  const e = current.entry, list = [];
+  if (e.caseworker) list.push({ name: e.caseworker, role: "Assigned caseworker" });
+  e.extras = e.extras || [];
+  e.extras.forEach((name, xi) => { if (!name || !list.some(x => sameName(x.name, name))) list.push({ name, extra: true, xi }); });
+  return list;
+}
+function renderSend() {
+  const list = sendList();
+  $("sendRows").innerHTML = list.length ? list.map((p, i) => {
+    const rec = findPerson(p.name) || {}, dis = p.extra && !p.name ? "disabled" : "";
+    const who = p.extra
+      ? `<div class="who" style="display:flex; gap:6px; align-items:center"><input type="text" list="staffNames" data-xname="${p.xi}" value="${escapeHtml(p.name)}" placeholder="Name" aria-label="Name"><button class="x" data-xdel="${p.xi}" aria-label="Remove">×</button></div>`
+      : `<div class="who"><b>${escapeHtml(p.name)}</b><span>${escapeHtml(p.role)}</span></div>`;
+    return `<div class="send-row">${who}
+      <input type="email" data-pe="${escapeHtml(p.name)}" value="${escapeHtml(rec.email || "")}" placeholder="email" aria-label="email" ${dis}>
+      <select data-pl="${escapeHtml(p.name)}" aria-label="language" ${dis}>${langOptions(rec.language)}</select>
+      <button class="small" data-send="${i}" ${dis}>Email</button></div>`;
+  }).join("") + `<datalist id="staffNames">${people.map(x => `<option value="${escapeHtml(x.name)}">`).join("")}</datalist>`
+    : '<p class="hint" style="margin:10px 0 0">Assign a caseworker above, or use "+ Add someone".</p>';
+}
+$("sendRows").addEventListener("change", (e) => {
+  const d = e.target.dataset;
+  if (d.pe) upsertPerson(d.pe, { email: e.target.value.trim() });
+  if (d.pl) upsertPerson(d.pl, { language: e.target.value });
+  if (d.xname !== undefined) {
+    const name = e.target.value.trim(); current.entry.extras[Number(d.xname)] = name; persist();
+    if (name && !findPerson(name)) upsertPerson(name, {});
+    setTimeout(() => { renderSend(); const em = $("sendRows").querySelector(`input[data-pe="${CSS.escape(name)}"]`); if (em && !em.value) em.focus(); }, 0);
+  }
+});
+$("sendRows").addEventListener("click", async (e) => {
+  const d = e.target.dataset;
+  if (d.xdel !== undefined) { current.entry.extras.splice(Number(d.xdel), 1); persist(); renderSend(); return; }
+  if (d.send === undefined) return;
+  const p = sendList()[Number(d.send)], rec = findPerson(p.name) || {};
+  let mail = { subject: `Intake: client ${current.entry.label} (${current.s.priority})`, body: `Hi ${p.name.split(" ")[0]},\n\n${staffText()}\n\nThanks!` };
+  if (rec.language && rec.language !== "English") {
+    const key = $("key").value.trim();
+    if (!key) return setStatus(`Add your API key to translate into ${rec.language}, or set the language to English.`, true);
+    e.target.disabled = true; setStatus(`Translating into ${rec.language}…`);
+    try { mail = parseJson(await callClaude(key, `Translate the email the user gives you into ${rec.language} for a nonprofit staff member. Keep IDs, dates, numbers, phone numbers and program names exactly as written. Return ONLY JSON: {"subject": string, "body": string}`, `Subject: ${mail.subject}\n\n${mail.body}`, 5000)); }
+    catch (err) { setStatus(err.message, true); e.target.disabled = false; return; }
+    e.target.disabled = false; setStatus(`Opened the email in ${rec.language}.`);
+  }
+  openMail(rec.email, mail.subject, mail.body);
+});
+$("addRecipient").addEventListener("click", () => {
+  if (!current) return;
+  current.entry.extras = current.entry.extras || []; current.entry.extras.push(""); renderSend();
+  const ins = $("sendRows").querySelectorAll("input[data-xname]"); ins[ins.length - 1]?.focus();
+});
+
+function renderReferRows() {
+  const e = current.entry, fit = fitPrograms();
+  $("referNote").innerHTML = e.consent
+    ? "The client agreed to share their information. Each email shares only what that program needs."
+    : '<b class="r-fail">Locked:</b> check "The client agreed…" above before sending referrals.';
+  $("referRows").innerHTML = fit.length ? fit.map(r => {
+    const p = r.program, st = e.referrals[p.id]?.status || "none";
+    return `<div class="send-row" style="grid-template-columns: 1fr auto">
+      <div class="who"><b>${escapeHtml(p.name)}</b><span>${escapeHtml(p.email || "no referral email set")} · ${REF_STATUS[st]}</span></div>
+      <button class="small" data-referral="${p.id}" ${!e.consent || !p.email ? "disabled" : ""}>Email referral</button></div>`;
+  }).join("") : '<p class="hint" style="margin:10px 0 0">No programs to refer to.</p>';
+}
+$("referRows").addEventListener("click", (ev) => {
+  const id = ev.target.dataset.referral; if (!id) return;
+  const e = current.entry; if (!e.consent) return;
+  const r = current.s.results.find(x => x.program.id === id), p = r.program, d = current.data, f = d.facts, s = current.s, o = org();
+  const cw = findPerson(e.caseworker);
+  const needs = s.needs.filter(n => p.needs.includes(n.category));
+  const body = [`Hello ${p.contact || ""},`.replace(" ,", ","), "",
+    `${o.name || "Our organization"} would like to refer a client (ID ${e.label}) to ${p.name}.`, "",
+    "What they need:", ...needs.map(n => `- ${n.detail}${validDate(n.deadline) ? ` (deadline ${prettyDate(n.deadline)})` : ""}`), "",
+    `Household: ${f.household_size ?? "?"} people${s.fpl !== null && p.maxFpl != null ? `, income about ${Math.round(s.fpl)}% of the poverty guideline` : ""}${zipList(p).length && f.zip ? `, ZIP ${f.zip}` : ""}. Preferred language: ${d.language || "English"}.`,
+    `Our screening: ${r.status === "likely" ? "likely eligible under your published criteria" : `may be eligible; still confirming: ${r.reasons.filter(x => x.s === "unknown").map(x => x.t.split(";")[0]).join(", ")}`}.`, "",
+    `The client agreed on ${prettyDate(e.date)} to share this information for this referral.`, "",
+    `Please contact ${cw ? `${cw.name}${cw.email ? ` (${cw.email})` : ""}` : "us"} to coordinate, or reach the client through us.`, "", "Thank you!"].join("\n");
+  openMail(p.email, `Referral: client ${e.label} to ${p.name}${s.priority === "urgent" ? " (urgent)" : ""}`, body);
+  if ((e.referrals[id]?.status || "none") === "none") { e.referrals[id] = { status: "referred", at: new Date().toISOString() }; if (e.status === "new") { e.status = "referred"; $("caseStatus").value = "referred"; } persist(); renderScreen(); }
+});
+
+/* Exports */
+$("copySummary").addEventListener("click", () => current && copy(staffText(), "Staff summary copied."));
+$("csvIntake").addEventListener("click", () => {
+  if (!current) return;
+  const e = current.entry, s = current.s;
+  download(`${slug()}-intake-${e.label}-${e.date}.csv`, csv([["Client", "Date", "Priority", "Program", "Result", "Reasons", "Referral", "Documents"],
+    ...s.results.map(r => [e.label, e.date, s.priority, r.program.name, { likely: "Likely eligible", check: "Check", no: "Doesn't fit" }[r.status], r.reasons.map(x => (x.s === "pass" ? "✓ " : x.s === "fail" ? "✗ " : "? ") + x.t).join(" | "), REF_STATUS[e.referrals[r.program.id]?.status || "none"], r.program.docs]),
+    ...s.unmet.map(n => [e.label, e.date, s.priority, "(no program)", "Unmet need", `${NEEDS[n.category]}: ${n.detail}`, "", ""])]));
+});
+
+/* ======================================================================
+   Saved intakes
+   ====================================================================== */
+function renderHistory() {
+  const list = [...intakes].sort((a, b) => b.date.localeCompare(a.date) || b.savedAt.localeCompare(a.savedAt));
+  $("historyRows").innerHTML = list.length ? list.map(e => {
+    const s = screen(e.data, e.date, $("region").value);
+    return `<tr><td>${escapeHtml(prettyDate(e.date))}</td><td><b>${escapeHtml(e.label)}</b></td><td><span class="pill pr-${s.priority}">${s.priority}</span></td>
+      <td>${CASE_STATUS[e.status] || e.status}</td><td>${escapeHtml(e.caseworker || "—")}</td>
+      <td style="white-space:nowrap"><button class="small" data-open="${e.id}">Open</button> <button class="x" data-del="${e.id}" aria-label="Delete">×</button></td></tr>`;
+  }).join("") : '<tr><td colspan="6" class="hint">Intakes you screen are saved here.</td></tr>';
+  setupSummary();
+}
+$("historyRows").addEventListener("click", (e) => {
+  const o = e.target.dataset.open, d = e.target.dataset.del;
+  if (o) { const x = intakes.find(i => i.id === o); if (x) { openIntake(x, false); setStatus(`Opened intake ${x.label}.`); } }
+  if (d && confirm("Delete this intake from this browser? This can't be undone.")) {
+    intakes = intakes.filter(i => i.id !== d); saveIntakes();
+    if (current?.entry.id === d) { current = null; $("results").hidden = true; }
+    renderHistory(); renderDigest();
+  }
+});
+$("exportBackup").addEventListener("click", () => {
+  download(`${slug()}-intake-backup-${isoToday()}.json`, JSON.stringify({ app: "nonprofit-intake-screener", version: 1, exportedAt: new Date().toISOString(), org: org(), programs, people, intakes }, null, 2), "application/json");
+  setStatus("Backup downloaded. It contains client details: store it somewhere secure.");
+});
+$("importBtn").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async () => {
+  const file = $("importFile").files[0]; if (!file) return;
+  try {
+    const b = JSON.parse(await file.text());
+    if (b.app !== "nonprofit-intake-screener") throw new Error("That file isn't a backup from this tool.");
+    const have = new Set(intakes.map(i => i.id));
+    const inc = (b.intakes || []).filter(i => !have.has(i.id));
+    intakes = [...inc, ...intakes]; saveIntakes();
+    (b.people || []).forEach(p => { if (p.name && !findPerson(p.name)) people.push(p); }); savePeople();
+    if (b.programs?.length && confirm("Also replace your programs with the ones in this backup?")) { programs = b.programs; savePrograms(); renderPrograms(); }
+    renderPeople(); renderHistory(); renderDigest();
+    setStatus(`Imported ${inc.length} intake${inc.length === 1 ? "" : "s"}.`);
+  } catch (err) { setStatus(err.message || "Couldn't read that file.", true); }
+  $("importFile").value = "";
+});
+
+/* ======================================================================
+   Weekly digest (with unmet needs = community gaps)
+   ====================================================================== */
+function digestData() {
+  const today = isoToday(), from = (() => { const x = new Date(today + "T12:00"); x.setDate(x.getDate() - 6); return x.toISOString().slice(0, 10); })();
+  const list = intakes.filter(i => i.date >= from && i.date <= today);
+  const region = $("region").value, needs = new Map(), refs = new Map(), gaps = new Map();
+  let urgent = 0, safety = 0, referred = 0;
+  list.forEach(i => {
+    const s = screen(i.data, i.date, region);
+    if (s.priority === "urgent") urgent++;
+    if (i.data.safety?.concern) safety++;
+    s.needs.forEach(n => needs.set(n.category, (needs.get(n.category) || 0) + 1));
+    s.unmet.forEach(n => { const g = gaps.get(n.category) || { n: 0, ex: [] }; g.n++; if (g.ex.length < 3) g.ex.push(n.detail); gaps.set(n.category, g); });
+    Object.entries(i.referrals || {}).forEach(([pid, r]) => { if (r.status === "none") return; const p = programs.find(x => x.id === pid); const k = p ? p.name : "Removed program"; refs.set(k, (refs.get(k) || 0) + 1); });
+    if (Object.values(i.referrals || {}).some(r => r.status !== "none")) referred++;
+  });
+  const follow = intakes.filter(i => i.followUp && i.followUp <= (() => { const x = new Date(today + "T12:00"); x.setDate(x.getDate() + 7); return x.toISOString().slice(0, 10); })() && !String(i.status).startsWith("closed"))
+    .sort((a, b) => a.followUp.localeCompare(b.followUp));
+  return { from, today, list, urgent, safety, referred, needs: [...needs].sort((a, b) => b[1] - a[1]), refs: [...refs].sort((a, b) => b[1] - a[1]), gaps: [...gaps].sort((a, b) => b[1].n - a[1].n), follow };
+}
+function renderDigest() {
+  const d = digestData();
+  $("digestPanel").hidden = intakes.length === 0;
+  if (!intakes.length) return;
+  $("digestMeta").textContent = `— ${prettyDate(d.from)} to ${prettyDate(d.today)}`;
+  $("digestStats").innerHTML = `
+    <div class="stat"><b>${d.list.length}</b><span>intakes</span></div>
+    <div class="stat ${d.urgent ? "crit" : ""}"><b>${d.urgent}</b><span>urgent</span></div>
+    <div class="stat ok"><b>${d.referred}</b><span>referred</span></div>
+    <div class="stat ${d.gaps.length ? "warn" : "ok"}"><b>${d.gaps.reduce((n, g) => n + g[1].n, 0)}</b><span>unmet needs</span></div>
+    <div class="stat ${d.follow.some(f => f.followUp < d.today) ? "crit" : ""}"><b>${d.follow.length}</b><span>follow-ups due</span></div>`;
+  const max = Math.max(1, ...d.needs.map(x => x[1]), ...d.refs.map(x => x[1]));
+  const bar = (n, c) => `<td style="width:35%"><div class="bar ${c || ""}" style="width:${n / max * 100}%"></div></td><td class="num">${n}</td>`;
+  $("digestNeeds").innerHTML = d.needs.length ? d.needs.map(([k, n]) => `<tr><td>${escapeHtml(NEEDS[k])}</td>${bar(n)}</tr>`).join("") : '<tr><td class="hint">No intakes this week.</td></tr>';
+  $("digestRefs").innerHTML = d.refs.length ? d.refs.map(([k, n]) => `<tr><td>${escapeHtml(k)}</td>${bar(n)}</tr>`).join("") : '<tr><td class="hint">No referrals yet this week.</td></tr>';
+  $("digestGaps").innerHTML = d.gaps.length ? `<h3 style="margin-top:16px">Unmet needs (no program fit)</h3><div class="table-wrap"><table><tbody>${d.gaps.map(([k, g]) => `<tr><td><b>${escapeHtml(NEEDS[k])}</b></td>${bar(g.n, "c")}<td class="hint">${escapeHtml(g.ex.join(" · "))}</td></tr>`).join("")}</tbody></table></div>` : "";
+  $("digestFollow").innerHTML = d.follow.length ? `<h3 style="margin-top:16px">Follow-ups due in the next 7 days</h3><div class="table-wrap"><table><tbody>${d.follow.map(i => `<tr><td style="white-space:nowrap" class="${i.followUp < d.today ? "r-fail" : ""}">${escapeHtml(prettyDate(i.followUp))}${i.followUp < d.today ? " (overdue)" : ""}</td><td><b>${escapeHtml(i.label)}</b></td><td>${escapeHtml(i.caseworker || "Unassigned")}</td><td>${CASE_STATUS[i.status]}</td><td><button class="linkbtn" data-open-intake="${i.id}">Open</button></td></tr>`).join("")}</tbody></table></div>` : "";
+}
+$("digestFollow").addEventListener("click", (e) => { const id = e.target.dataset.openIntake; if (id) { const x = intakes.find(i => i.id === id); if (x) openIntake(x, false); } });
+function digestText() {
+  const d = digestData(), o = org();
+  const L = [`Weekly intake digest${o.name ? ` — ${o.name}` : ""}`, `${prettyDate(d.from)} to ${prettyDate(d.today)}`, "",
+    `${d.list.length} intakes · ${d.urgent} urgent · ${d.referred} referred · ${d.gaps.reduce((n, g) => n + g[1].n, 0)} unmet needs · ${d.follow.length} follow-ups due`, "", "NEEDS WE HEARD"];
+  d.needs.forEach(([k, n]) => L.push(`- ${NEEDS[k]}: ${n}`));
+  L.push("", "REFERRALS BY PROGRAM"); d.refs.forEach(([k, n]) => L.push(`- ${k}: ${n}`));
+  if (d.gaps.length) { L.push("", "UNMET NEEDS (no program fit)"); d.gaps.forEach(([k, g]) => L.push(`- ${NEEDS[k]}: ${g.n} (e.g. ${g.ex.join("; ")})`)); }
+  if (d.follow.length) { L.push("", "FOLLOW-UPS DUE"); d.follow.forEach(i => L.push(`- ${i.followUp} ${i.label} — ${i.caseworker || "unassigned"} — ${CASE_STATUS[i.status]}`)); }
+  return L.join("\n");
+}
+$("emailDigest").addEventListener("click", () => openMail(supervisors().map(p => p.email).join(","), `Weekly intake digest${org().name ? ` — ${org().name}` : ""}`, digestText()));
+$("copyDigest").addEventListener("click", () => copy(digestText(), "Digest copied."));
+$("csvGaps").addEventListener("click", () => {
+  const region = $("region").value, rows = [["Intake date", "Client", "Need", "Detail", "Urgency"]];
+  intakes.forEach(i => screen(i.data, i.date, region).unmet.forEach(n => rows.push([i.date, i.label, NEEDS[n.category], n.detail, n.urgencyCalc])));
+  download(`${slug()}-unmet-needs-${isoToday()}.csv`, csv(rows));
+});
+$("icsDigest").addEventListener("click", () => {
+  const d = new Date(); d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7));
+  const pad = (n) => String(n).padStart(2, "0");
+  ics(`${slug()}-monday-digest.ics`, `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`, "RRULE:FREQ=WEEKLY;BYDAY=MO", "Send weekly intake digest", `Open the intake screener and click "Email digest":\n${shareUrl()}`);
+  setStatus("Calendar reminder downloaded.");
+});
+
+/* ======================================================================
+   Recording (browser speech recognition)
+   ====================================================================== */
+const Recorder = {
+  rec: null, active: false, started: 0, timer: null, wakeLock: null,
+  supported() { return !!(window.SpeechRecognition || window.webkitSpeechRecognition); },
+  start() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    this.rec = new SR(); this.rec.lang = $("recLang").value; this.rec.continuous = true; this.rec.interimResults = true;
+    this.rec.onresult = (e) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript.trim(); if (!t) continue;
+        if (e.results[i].isFinal) { const x = $("transcript"); x.value += (x.value && !/\s$/.test(x.value) ? " " : "") + t.charAt(0).toUpperCase() + t.slice(1) + "."; x.scrollTop = x.scrollHeight; }
+        else interim += t + " ";
+      }
+      $("interim").textContent = interim;
+    };
+    this.rec.onerror = (e) => { if (e.error === "not-allowed" || e.error === "service-not-allowed") { this.stop(); recHelp("Microphone access was blocked. Allow the microphone for this site in your browser settings.", true); } };
+    this.rec.onend = () => { if (this.active) { try { this.rec.start(); } catch {} } };
+    try { this.rec.start(); } catch (err) { return recHelp("Couldn't start the microphone: " + err.message, true); }
+    this.active = true; this.started = Date.now();
+    $("recBtn").classList.add("recording"); $("recLabel").textContent = "Stop recording"; $("recLang").disabled = true; $("transcriptWrap").hidden = false;
+    recHelp("Listening… Speak naturally. Claude will pull out the facts.");
+    this.timer = setInterval(() => { const s = Math.floor((Date.now() - this.started) / 1000); $("recTimer").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }, 500);
+    if (navigator.wakeLock?.request) navigator.wakeLock.request("screen").then(l => this.wakeLock = l).catch(() => {});
+  },
+  stop() {
+    this.active = false; try { this.rec?.stop(); } catch {}
+    clearInterval(this.timer); $("recBtn").classList.remove("recording"); $("recLabel").textContent = "Start recording"; $("recLang").disabled = false; $("interim").textContent = "";
+    try { this.wakeLock?.release(); } catch {} this.wakeLock = null;
+    recHelp("Stopped. Check the transcript, then screen the intake.");
+  }
+};
+function recHelp(m, err = false) { $("recHelp").textContent = m; $("recHelp").classList.toggle("error", err); }
+$("recBtn").addEventListener("click", () => {
+  if (!Recorder.supported()) return recHelp("Recording isn't available in this browser. Use Chrome, Edge or Safari, or type notes instead.", true);
+  Recorder.active ? Recorder.stop() : Recorder.start();
+});
+
+/* ======================================================================
+   Organization, tailored link, demo, start-up
+   ====================================================================== */
+function applyOrg() {
+  const o = org(), t = ORG_TYPES[o.type] || ORG_TYPES.multi;
+  $("eyebrow").textContent = o.name ? `${o.name} · ${t.eyebrow}` : t.eyebrow;
+  document.title = o.name ? `${o.name} · Intake Screener` : "Nonprofit Intake Screener";
+  saveOrg();
+}
+function shareUrl() {
+  const o = org(), p = new URLSearchParams({ type: o.type, region: o.region });
+  if (o.name) p.set("org", o.name);
+  return `${location.origin}${location.pathname}?${p}`;
+}
+$("shareLink").addEventListener("click", () => copy(shareUrl(), "Tailored link copied. Programs and intakes stay in each person's own browser; share programs with a backup file."));
+$("orgName").addEventListener("change", applyOrg);
+$("orgType").addEventListener("change", () => { applyOrg(); setStatus('Organization type changed. Click "Load example programs for this type" if you want its starter programs.'); });
+$("region").addEventListener("change", () => { saveOrg(); if (current) renderScreen(); renderHistory(); });
+$("run").addEventListener("click", screenIntake);
+$("sample").addEventListener("click", () => { $("notes").value = SAMPLE_NOTES; $("clientLabel").value = "MR-1042"; setStatus("Sample intake loaded."); });
+$("demo").addEventListener("click", () => {
+  if (!programs.some(p => p.name === LIB.rent.name)) {
+    if (programs.length && !confirm("The demo uses the example programs. Load them? (This replaces your current programs.)")) return;
+    programs = presetPrograms("multi"); savePrograms(); renderPrograms();
+  }
+  const d = $("intakeDate").value || isoToday();
+  $("notes").value = SAMPLE_NOTES; $("clientLabel").value = "MR-1042"; $("consent").checked = true;
+  const data = demoExtraction(d); normalize(data);
+  openIntake({ id: "demo", date: d, label: "MR-1042", consent: true, savedAt: "", data, referrals: {}, status: "new", caseworker: people.find(p => p.role === "caseworker")?.name || "", followUp: "", notes: "", next: null, extras: [] }, true);
+  setStatus("Demo: try changing the income or ZIP in Household facts, then click “Write next steps” to see the Spanish sheet.");
+});
+
+$("orgType").innerHTML = Object.entries(ORG_TYPES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join("");
+$("recLang").innerHTML = REC_LANGS.map(([c, n]) => `<option value="${c}">${n}</option>`).join("");
+(function start() {
+  const params = new URLSearchParams(location.search), saved = readStore(ORG_KEY, {});
+  $("orgType").value = ORG_TYPES[params.get("type")] ? params.get("type") : (ORG_TYPES[saved.type] ? saved.type : "multi");
+  $("orgName").value = params.get("org") ?? saved.name ?? "";
+  $("region").value = FPL_2026[params.get("region")] ? params.get("region") : (FPL_2026[saved.region] ? saved.region : "contiguous");
+  if (!Array.isArray(programs)) { programs = presetPrograms($("orgType").value); savePrograms(); }
+  $("intakeDate").value = isoToday();
+  applyOrg(); renderPrograms(); renderPeople(); renderHistory(); renderDigest();
+  if (location.search) history.replaceState(null, "", location.pathname);
+})();
+</script>
+</body>
+</html>
