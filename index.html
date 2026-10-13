@@ -122,6 +122,37 @@
   .bar.c { background: var(--crit); }
   td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   #nextText { min-height: 300px; }
+  /* Returning client, cliff, follow-ups */
+  .returning { margin-top: 10px; border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 8px 12px; font-size: 0.9rem; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .warnbox { background: var(--warn-soft); border: 1px solid var(--warn); border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 0.92rem; }
+  .overdue { display: inline-block; font-size: 0.72rem; font-weight: 800; color: #fff; background: var(--crit); padding: 1px 7px; border-radius: 999px; margin-left: 4px; }
+  .whatif { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+  .whatif input { width: 140px; padding: 7px 10px; }
+  .gain { color: var(--ok); font-weight: 700; } .lose { color: var(--crit); font-weight: 700; }
+  .change-up { color: var(--crit); } .change-down { color: var(--ok); }
+  .selfbadge { background: var(--accent); color: var(--accent-ink); }
+  .infobanner { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px; padding: 12px 14px; margin-top: 20px; }
+  .clientnote { background: var(--panel); border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-style: italic; }
+  /* Self-intake kiosk */
+  .kiosk { position: fixed; inset: 0; background: var(--bg); overflow-y: auto; z-index: 50; }
+  .kwrap { max-width: 760px; margin: 0 auto; padding: 28px 18px 80px; }
+  .kiosk h1 { font-size: 2rem; } .kiosk p.lead { font-size: 1.15rem; color: var(--muted); }
+  .kq { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-top: 16px; }
+  .kq > label, .kq > .label { font-size: 1.15rem; margin-bottom: 10px; }
+  .kq input, .kq select, .kq textarea { font-size: 1.15rem; padding: 12px 14px; }
+  .kbtn { font-size: 1.15rem; padding: 14px 20px; border-radius: 12px; }
+  .klangs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 24px; }
+  .klangs button { font-size: 1.4rem; padding: 26px 12px; border-radius: 14px; }
+  .ktiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 560px) { .ktiles { grid-template-columns: 1fr 1fr; } .klangs { grid-template-columns: 1fr; } }
+  .ktiles button { font-size: 1.05rem; padding: 16px 8px; border-radius: 12px; font-weight: 600; }
+  .ktiles button.on, .kyn button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .kyn { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .kyn button { font-size: 1.05rem; padding: 10px 18px; border-radius: 10px; }
+  .kflag { padding: 10px 0; border-bottom: 1px dashed var(--line); font-size: 1.05rem; }
+  .kflag:last-child { border-bottom: none; }
+  .kstaff { position: fixed; right: 12px; bottom: 12px; z-index: 51; opacity: 0.6; font-size: 0.85rem; }
+  .kerr { color: var(--crit); font-weight: 700; font-size: 1.1rem; margin-top: 12px; }
   footer { margin-top: 28px; color: var(--muted); font-size: 0.85rem; }
   [hidden] { display: none !important; }
   @media print {
@@ -140,7 +171,10 @@
         <p class="eyebrow" id="eyebrow">Client intake</p>
         <h1>Intake → Program Matches</h1>
       </div>
-      <button class="linkbtn noprint" id="shareLink">Copy tailored link</button>
+      <div class="row noprint" style="margin-top:4px">
+        <button class="linkbtn" id="kioskOpen">Client self-intake mode</button>
+        <button class="linkbtn" id="shareLink">Copy tailored link</button>
+      </div>
     </div>
     <p>Type, paste or record a client's situation in any language. Claude pulls out the facts, then the page checks them against <b>your</b> programs' eligibility rules, shows exactly why each program fits or doesn't, lists what to ask next, and writes the client's next steps in their own language.</p>
   </header>
@@ -156,6 +190,12 @@
           <select id="region"><option value="contiguous">48 states &amp; DC</option><option value="alaska">Alaska</option><option value="hawaii">Hawaii</option></select></div>
       </div>
       <p class="hint" style="margin:6px 0 0">Changing the organization type offers a starter set of example programs. Replace them with your real programs and rules.</p>
+
+      <div class="grid3" style="margin-top:14px">
+        <div><label for="setFollow">Referral follow-up after <span class="hint">(days with no update)</span></label><input id="setFollow" type="number" min="1" max="60" value="7"></div>
+        <div><label for="setCliff">Benefits cliff warning within <span class="hint">($ per month)</span></label><input id="setCliff" type="number" min="0" step="25" value="300"></div>
+        <div><label for="setPin">Self-intake exit PIN <span class="hint">(optional)</span></label><input id="setPin" type="password" inputmode="numeric" maxlength="8" placeholder="none" autocomplete="off"></div>
+      </div>
 
       <h3 style="margin-top:20px">Programs <span class="hint" id="progCount"></span></h3>
       <p class="hint" style="margin:2px 0 0">Each program's rules are checked by the page, not by AI. Leave a rule empty if it doesn't apply.</p>
@@ -188,6 +228,8 @@
       <div><label for="clientLabel">Client ID or initials</label><input id="clientLabel" type="text" maxlength="30" placeholder="e.g. MR-1042"></div>
       <div><label for="intakeDate">Intake date</label><input id="intakeDate" type="date"></div>
     </div>
+
+    <div id="returning" class="returning" hidden></div>
 
     <label for="notes" style="margin-top:16px">What's going on? <span class="hint">— staff notes, the client's own words, a form, any language</span></label>
     <textarea id="notes" placeholder="Household, income, where they live, what they need, any deadlines (eviction date, shutoff notice)…"></textarea>
@@ -222,6 +264,7 @@
 
   <!-- Results -->
   <section id="results" hidden>
+    <div id="selfBanner"></div>
     <div id="banners"></div>
 
     <div class="panel">
@@ -254,6 +297,26 @@
       </div>
       <p class="hint" style="margin:6px 0 0">Calculated by the page from your program rules. ✓ meets the rule · ✗ doesn't · ? information missing.</p>
       <div id="matches"></div>
+    </div>
+
+    <div class="panel" id="cliffPanel">
+      <h2>Income changes (benefits cliff)</h2>
+      <p class="hint" style="margin:0">How much the household's income could rise before it loses each program, and what a change would do. A raise that costs more in lost help than it adds is a "benefits cliff."</p>
+      <div id="cliffWarn"></div>
+      <div class="table-wrap" style="margin-top:10px"><table>
+        <thead><tr><th>Program</th><th>Income limit</th><th>Room before the limit</th><th id="whatifHead">If income changes</th></tr></thead>
+        <tbody id="cliffRows"></tbody>
+      </table></div>
+      <div class="whatif noprint"><label for="whatif" style="margin:0">What if household income became</label><input id="whatif" type="number" min="0" step="50" placeholder="e.g. 2400"> <span class="hint">per month?</span></div>
+    </div>
+
+    <div class="panel" id="pastPanel" hidden>
+      <h2>Past visits <span class="hint" id="pastMeta"></span></h2>
+      <div id="pastChanges"></div>
+      <div class="table-wrap" style="margin-top:10px"><table>
+        <thead><tr><th>Date</th><th>Priority</th><th>Needs</th><th>Referrals and outcomes</th><th>Status</th><th></th></tr></thead>
+        <tbody id="pastRows"></tbody>
+      </table></div>
     </div>
 
     <div class="panel">
@@ -320,6 +383,7 @@
     </div>
     <div id="digestGaps"></div>
     <div id="digestFollow"></div>
+    <div id="digestOverdue"></div>
     <div class="row noprint">
       <button class="small primary" id="emailDigest">Email digest to supervisors</button>
       <button class="small" id="copyDigest">Copy digest</button>
@@ -328,6 +392,12 @@
     </div>
     <p class="hint" style="margin:10px 0 0">Covers intakes dated in the last 7 days. "Unmet needs" are needs where no program fit; they show where your community has gaps, which funders and grant reports often ask about.</p>
   </section>
+
+  <!-- Client self-intake (kiosk) -->
+  <div class="kiosk" id="kiosk" hidden>
+    <div class="kwrap" id="kioskBody"></div>
+    <button class="small kstaff" id="kioskExit">Staff</button>
+  </div>
 
   <footer id="footer">Built with the Claude API. Notes go straight from your browser to Anthropic's API. Eligibility is calculated by the page from your own program rules; always confirm with the program before promising a client anything.</footer>
 </div>
@@ -740,6 +810,8 @@ Rules:
 - If income is stated as a range or estimate, use the stated figure. If income is zero, use 0. If only hourly pay is given, leave income null and ask about it.
 - urgency: "urgent" = could lose housing, utilities, food or safety within about a week; "soon" = within a few weeks; otherwise "routine".
 - safety.concern is true only for danger to someone: violence or abuse at home, thoughts of self-harm, no safe place to sleep tonight, or a child at risk. Keep the note short and factual.
+- Text marked "Previous visit (context)" describes an earlier intake. Use it only to fill a fact that today's notes don't mention and don't contradict; today's notes always win. Don't repeat old needs unless today's notes say they're still a problem.
+- Text marked "Client's own answers" came from a self-intake form; treat the answers as stated facts.
 - Do not record or ask about immigration status, Social Security numbers, criminal history, or medical diagnoses. Do not repeat the client's full name; use "the client".`;
 }
 
@@ -781,6 +853,7 @@ function openIntake(entry, isDemo) {
   current = { entry, data: entry.data, isDemo };
   $("clientLabel").value = entry.label; $("intakeDate").value = entry.date; $("consent").checked = !!entry.consent;
   renderResults();
+  renderReturningNotice();
   $("results").hidden = false;
   $("results").scrollIntoView({ behavior: "smooth", block: "start" });
   renderHistory(); renderDigest();
@@ -833,19 +906,22 @@ function renderScreen() {
         ${p.phone || p.contact ? `<span class="hint">${escapeHtml(p.contact)}${p.phone ? ` · ${escapeHtml(p.phone)}` : ""}</span>` : ""}</div>
       <ul class="reasons">${r.reasons.map(x => `<li class="r-${x.s}">${x.s === "pass" ? "✓" : x.s === "fail" ? "✗" : "?"} ${escapeHtml(x.t)}</li>`).join("")}</ul>
       ${p.docs && r.status !== "no" ? `<div class="docs"><b>Bring:</b> ${escapeHtml(p.docs)}</div>` : ""}
-      ${r.status !== "no" ? `<div class="refer noprint"><span class="hint">Referral:</span><select data-ref="${p.id}" aria-label="Referral status for ${escapeHtml(p.name)}">${Object.entries(REF_STATUS).map(([k, v]) => `<option value="${k}" ${k === ref ? "selected" : ""}>${v}</option>`).join("")}</select></div>` : ""}
+      ${r.status !== "no" ? `<div class="refer noprint"><span class="hint">Referral:</span><select data-ref="${p.id}" aria-label="Referral status for ${escapeHtml(p.name)}">${Object.entries(REF_STATUS).map(([k, v]) => `<option value="${k}" ${k === ref ? "selected" : ""}>${v}</option>`).join("")}</select>${refAge(entry, p)}</div>` : ""}
     </div>`;
   }).join("") : '<p class="hint" style="margin:10px 0 0">None of your active programs cover these needs. Add programs under "Organization, programs &amp; team".</p>';
   // Questions
   $("questions").innerHTML = s.questions.length ? s.questions.map(q => `<li>${escapeHtml(q.text)}${q.why.length ? `<div class="src">Needed for: ${escapeHtml(q.why.join(", "))}</div>` : q.key === "claude" ? '<div class="src">Suggested by Claude</div>' : ""}</li>`).join("")
     : '<li class="hint" style="list-style:none; margin-left:-22px">Nothing missing for the programs that fit.</li>';
   renderReferRows();
+  renderCliff();
+  renderPast();
+  renderSelfBanner();
 }
 $("matches").addEventListener("change", (e) => {
   const id = e.target.dataset.ref; if (!id) return;
   current.entry.referrals[id] = { status: e.target.value, at: new Date().toISOString() };
   if (e.target.value !== "none" && current.entry.status === "new") { current.entry.status = "referred"; $("caseStatus").value = "referred"; }
-  persist(); renderReferRows();
+  persist(); setTimeout(renderScreen, 0);   // redraw after the menu finishes its own events, so the referral age and check-in appear
   setStatus(`Referral marked "${REF_STATUS[e.target.value]}".${current.isDemo ? " (Demo changes aren't saved.)" : ""}`);
 });
 $("showNo").addEventListener("change", renderScreen);
@@ -981,6 +1057,10 @@ function staffText() {
   s.results.filter(r => r.status !== "no").forEach(r => L.push(`- ${r.program.name}: ${r.status === "likely" ? "likely eligible" : "check: info missing"}; referral ${REF_STATUS[e.referrals[r.program.id]?.status || "none"].toLowerCase()}`));
   if (s.unmet.length) { L.push("", "UNMET NEEDS (no program fits)"); s.unmet.forEach(n => L.push(`- ${NEEDS[n.category]}: ${n.detail}`)); }
   if (s.questions.length) { L.push("", "QUESTIONS TO ASK NEXT"); s.questions.forEach(q => L.push(`- ${q.text}`)); }
+  const cw = cliffRows().filter(c => c.warn);
+  if (cw.length) { L.push("", "BENEFITS CLIFF"); cw.forEach(c => L.push(`- ${c.program.name}: only ${money(c.roomMonthly)}/month below the income limit`)); }
+  const od = overdueReferrals([e]);
+  if (od.length) { L.push("", "REFERRALS WAITING FOR A RESPONSE"); od.forEach(o => L.push(`- ${o.program.name}: referred ${o.days} days ago, no update`)); }
   if (d.safety?.concern) L.push("", `SAFETY CONCERN: ${d.safety.note || "see intake"}`);
   L.push("", `Case status: ${CASE_STATUS[e.status]}${e.caseworker ? ` · caseworker ${e.caseworker}` : ""}${e.followUp ? ` · follow up by ${e.followUp}` : ""}`);
   return L.join("\n");
@@ -1084,7 +1164,7 @@ function renderHistory() {
   const list = [...intakes].sort((a, b) => b.date.localeCompare(a.date) || b.savedAt.localeCompare(a.savedAt));
   $("historyRows").innerHTML = list.length ? list.map(e => {
     const s = screen(e.data, e.date, $("region").value);
-    return `<tr><td>${escapeHtml(prettyDate(e.date))}</td><td><b>${escapeHtml(e.label)}</b></td><td><span class="pill pr-${s.priority}">${s.priority}</span></td>
+    return `<tr><td>${escapeHtml(prettyDate(e.date))}</td><td><b>${escapeHtml(e.label)}</b>${e.source === "self" && !e.reviewed ? ' <span class="pill selfbadge">Self · review</span>' : ""}</td><td><span class="pill pr-${s.priority}">${s.priority}</span></td>
       <td>${CASE_STATUS[e.status] || e.status}</td><td>${escapeHtml(e.caseworker || "—")}</td>
       <td style="white-space:nowrap"><button class="small" data-open="${e.id}">Open</button> <button class="x" data-del="${e.id}" aria-label="Delete">×</button></td></tr>`;
   }).join("") : '<tr><td colspan="6" class="hint">Intakes you screen are saved here.</td></tr>';
@@ -1139,7 +1219,8 @@ function digestData() {
   });
   const follow = intakes.filter(i => i.followUp && i.followUp <= (() => { const x = new Date(today + "T12:00"); x.setDate(x.getDate() + 7); return x.toISOString().slice(0, 10); })() && !String(i.status).startsWith("closed"))
     .sort((a, b) => a.followUp.localeCompare(b.followUp));
-  return { from, today, list, urgent, safety, referred, needs: [...needs].sort((a, b) => b[1] - a[1]), refs: [...refs].sort((a, b) => b[1] - a[1]), gaps: [...gaps].sort((a, b) => b[1].n - a[1].n), follow };
+  const overdue = overdueReferrals(intakes), selfPending = intakes.filter(i => i.source === "self" && !i.reviewed).length;
+  return { from, today, list, urgent, safety, referred, overdue, selfPending, needs: [...needs].sort((a, b) => b[1] - a[1]), refs: [...refs].sort((a, b) => b[1] - a[1]), gaps: [...gaps].sort((a, b) => b[1].n - a[1].n), follow };
 }
 function renderDigest() {
   const d = digestData();
@@ -1151,14 +1232,28 @@ function renderDigest() {
     <div class="stat ${d.urgent ? "crit" : ""}"><b>${d.urgent}</b><span>urgent</span></div>
     <div class="stat ok"><b>${d.referred}</b><span>referred</span></div>
     <div class="stat ${d.gaps.length ? "warn" : "ok"}"><b>${d.gaps.reduce((n, g) => n + g[1].n, 0)}</b><span>unmet needs</span></div>
-    <div class="stat ${d.follow.some(f => f.followUp < d.today) ? "crit" : ""}"><b>${d.follow.length}</b><span>follow-ups due</span></div>`;
+    <div class="stat ${d.follow.some(f => f.followUp < d.today) ? "crit" : ""}"><b>${d.follow.length}</b><span>follow-ups due</span></div>
+    <div class="stat ${d.overdue.length ? "crit" : "ok"}"><b>${d.overdue.length}</b><span>referrals overdue</span></div>
+    ${d.selfPending ? `<div class="stat warn"><b>${d.selfPending}</b><span>self-intakes to review</span></div>` : ""}`;
   const max = Math.max(1, ...d.needs.map(x => x[1]), ...d.refs.map(x => x[1]));
   const bar = (n, c) => `<td style="width:35%"><div class="bar ${c || ""}" style="width:${n / max * 100}%"></div></td><td class="num">${n}</td>`;
   $("digestNeeds").innerHTML = d.needs.length ? d.needs.map(([k, n]) => `<tr><td>${escapeHtml(NEEDS[k])}</td>${bar(n)}</tr>`).join("") : '<tr><td class="hint">No intakes this week.</td></tr>';
   $("digestRefs").innerHTML = d.refs.length ? d.refs.map(([k, n]) => `<tr><td>${escapeHtml(k)}</td>${bar(n)}</tr>`).join("") : '<tr><td class="hint">No referrals yet this week.</td></tr>';
   $("digestGaps").innerHTML = d.gaps.length ? `<h3 style="margin-top:16px">Unmet needs (no program fit)</h3><div class="table-wrap"><table><tbody>${d.gaps.map(([k, g]) => `<tr><td><b>${escapeHtml(NEEDS[k])}</b></td>${bar(g.n, "c")}<td class="hint">${escapeHtml(g.ex.join(" · "))}</td></tr>`).join("")}</tbody></table></div>` : "";
+  renderOverdue(d);
   $("digestFollow").innerHTML = d.follow.length ? `<h3 style="margin-top:16px">Follow-ups due in the next 7 days</h3><div class="table-wrap"><table><tbody>${d.follow.map(i => `<tr><td style="white-space:nowrap" class="${i.followUp < d.today ? "r-fail" : ""}">${escapeHtml(prettyDate(i.followUp))}${i.followUp < d.today ? " (overdue)" : ""}</td><td><b>${escapeHtml(i.label)}</b></td><td>${escapeHtml(i.caseworker || "Unassigned")}</td><td>${CASE_STATUS[i.status]}</td><td><button class="linkbtn" data-open-intake="${i.id}">Open</button></td></tr>`).join("")}</tbody></table></div>` : "";
 }
+function renderOverdue(d) {
+  $("digestOverdue").innerHTML = d.overdue.length ? `<h3 style="margin-top:16px">Referrals waiting for a response <span class="hint">(no update in ${settings.followDays}+ days)</span></h3>
+    <div class="table-wrap"><table><tbody>${d.overdue.map(o => `<tr><td><b>${escapeHtml(o.entry.label)}</b></td><td>${escapeHtml(o.program.name)}</td>
+      <td class="r-fail" style="white-space:nowrap">${o.days} days</td><td class="hint">${o.lastCheckin ? `checked in ${escapeHtml(prettyDate(o.lastCheckin))}` : "no check-in yet"}</td>
+      <td style="white-space:nowrap"><button class="linkbtn" data-checkin="${o.entry.id}|${o.program.id}">Draft check-in</button> · <button class="linkbtn" data-open-intake="${o.entry.id}">Open</button></td></tr>`).join("")}</tbody></table></div>` : "";
+}
+$("digestOverdue").addEventListener("click", (e) => {
+  const c = e.target.dataset.checkin, o = e.target.dataset.openIntake;
+  if (c) { const [eid, pid] = c.split("|"); const en = intakes.find(i => i.id === eid), pr = programs.find(x => x.id === pid); if (en && pr) checkIn(en, pr); }
+  if (o) { const x = intakes.find(i => i.id === o); if (x) openIntake(x, false); }
+});
 $("digestFollow").addEventListener("click", (e) => { const id = e.target.dataset.openIntake; if (id) { const x = intakes.find(i => i.id === id); if (x) openIntake(x, false); } });
 function digestText() {
   const d = digestData(), o = org();
@@ -1167,6 +1262,8 @@ function digestText() {
   d.needs.forEach(([k, n]) => L.push(`- ${NEEDS[k]}: ${n}`));
   L.push("", "REFERRALS BY PROGRAM"); d.refs.forEach(([k, n]) => L.push(`- ${k}: ${n}`));
   if (d.gaps.length) { L.push("", "UNMET NEEDS (no program fit)"); d.gaps.forEach(([k, g]) => L.push(`- ${NEEDS[k]}: ${g.n} (e.g. ${g.ex.join("; ")})`)); }
+  if (d.overdue.length) { L.push("", `REFERRALS WAITING ${settings.followDays}+ DAYS FOR A RESPONSE`); d.overdue.forEach(o => L.push(`- ${o.entry.label} → ${o.program.name}: ${o.days} days`)); }
+  if (d.selfPending) L.push("", `SELF-INTAKES TO REVIEW: ${d.selfPending}`);
   if (d.follow.length) { L.push("", "FOLLOW-UPS DUE"); d.follow.forEach(i => L.push(`- ${i.followUp} ${i.label} — ${i.caseworker || "unassigned"} — ${CASE_STATUS[i.status]}`)); }
   return L.join("\n");
 }
@@ -1258,6 +1355,341 @@ $("demo").addEventListener("click", () => {
 
 $("orgType").innerHTML = Object.entries(ORG_TYPES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join("");
 $("recLang").innerHTML = REC_LANGS.map(([c, n]) => `<option value="${c}">${n}</option>`).join("");
+/* ======================================================================
+   Settings
+   ====================================================================== */
+const SETTINGS_KEY = "intake-settings-v1";
+const settings = Object.assign({ followDays: 7, cliffMonthly: 300, pin: "" }, readStore(SETTINGS_KEY, {}));
+$("setFollow").value = settings.followDays; $("setCliff").value = settings.cliffMonthly; $("setPin").value = settings.pin;
+["setFollow", "setCliff", "setPin"].forEach(id => $(id).addEventListener("change", () => {
+  settings.followDays = Math.max(1, Number($("setFollow").value) || 7);
+  settings.cliffMonthly = Math.max(0, Number($("setCliff").value) || 0);
+  settings.pin = $("setPin").value.trim();
+  writeStore(SETTINGS_KEY, settings);
+  if (current) renderScreen(); renderDigest();
+}));
+
+/* ======================================================================
+   Referral follow-up loop
+   ====================================================================== */
+function daysSince(iso) { return iso ? Math.floor((Date.now() - Date.parse(iso)) / 864e5) : 0; }
+function overdueReferrals(list) {
+  const out = [];
+  list.forEach(entry => Object.entries(entry.referrals || {}).forEach(([pid, r]) => {
+    if (r.status !== "referred") return;
+    const days = daysSince(r.at), program = programs.find(p => p.id === pid);
+    if (program && days >= settings.followDays) out.push({ entry, program, days, lastCheckin: r.lastCheckin });
+  }));
+  return out.sort((a, b) => b.days - a.days);
+}
+function refAge(entry, p) {
+  const r = entry.referrals[p.id];
+  if (!r || r.status === "none" || !r.at) return "";
+  const days = daysSince(r.at), od = r.status === "referred" && days >= settings.followDays;
+  return ` <span class="hint">since ${escapeHtml(prettyDate(r.at.slice(0, 10)))} · ${days} day${days === 1 ? "" : "s"}</span>${od ? '<span class="overdue">No response</span>' : ""}
+    ${r.status === "referred" ? ` <button class="linkbtn" data-checkin="${p.id}">${od ? "Draft check-in email" : "Check in"}</button>` : ""}${r.lastCheckin ? ` <span class="hint">· checked in ${escapeHtml(prettyDate(r.lastCheckin.slice(0, 10)))}</span>` : ""}`;
+}
+function checkIn(entry, p) {
+  const r = entry.referrals[p.id] || {}, cw = findPerson(entry.caseworker), o = org();
+  const body = [`Hello ${p.contact || ""},`.replace(" ,", ","), "",
+    `${o.name || "Our organization"} referred a client (ID ${entry.label}) to ${p.name} on ${prettyDate((r.at || "").slice(0, 10)) || "an earlier date"}, and we haven't heard back yet.`, "",
+    "Could you let us know where things stand? For example: accepted, waitlisted, enrolled, unable to reach the client, or not eligible.", "",
+    `You can reply to ${cw ? `${cw.name}${cw.email ? ` (${cw.email})` : ""}` : "this email"}.`, "", "Thank you!"].join("\n");
+  openMail(p.email, `Checking on a referral: client ${entry.label} to ${p.name}`, body);
+  r.lastCheckin = new Date().toISOString(); entry.referrals[p.id] = r;
+  if (entry.id !== "demo") saveIntakes();
+  if (current?.entry === entry) renderScreen();
+  renderDigest();
+  setStatus(`Check-in drafted to ${p.name}.`);
+}
+$("matches").addEventListener("click", (e) => {
+  const pid = e.target.dataset.checkin; if (!pid) return;
+  const p = programs.find(x => x.id === pid); if (p) checkIn(current.entry, p);
+});
+
+/* ======================================================================
+   Benefits cliff: how much room before each income limit, and what-if
+   ====================================================================== */
+function cliffRows() {
+  if (!current) return [];
+  const region = $("region").value, f = current.data.facts, annual = annualIncome(f);
+  if (annual === null || !(f.household_size >= 1)) return [];
+  return current.s.results.filter(r => r.program.maxFpl != null).map(r => {
+    const limitAnnual = r.program.maxFpl / 100 * guideline(f.household_size, region);
+    const roomMonthly = (limitAnnual - annual) / 12;
+    const incomeOk = !r.reasons.some(x => x.s === "fail" && x.t.startsWith("Income"));
+    return { program: r.program, status: r.status, limitMonthly: limitAnnual / 12, roomMonthly, incomeOk, warn: incomeOk && r.status !== "no" && roomMonthly >= 0 && roomMonthly <= settings.cliffMonthly };
+  }).sort((a, b) => a.roomMonthly - b.roomMonthly);
+}
+function renderCliff() {
+  const rows = cliffRows(), f = current.data.facts;
+  $("cliffPanel").hidden = false;
+  if (!rows.length) {
+    $("cliffWarn").innerHTML = ""; $("cliffRows").innerHTML = `<tr><td colspan="4" class="hint">${annualIncome(f) === null || !f.household_size ? "Add household size and income to check this." : "None of the matched programs have an income limit."}</td></tr>`;
+    return;
+  }
+  const warn = rows.filter(r => r.warn);
+  $("cliffWarn").innerHTML = warn.length ? `<div class="warnbox"><b>Close to a cliff:</b> ${warn.map(r => `a raise of more than <b>${money(r.roomMonthly)}/month</b> could end ${escapeHtml(r.program.name)}`).join("; ")}. Talk this through before the client takes extra hours or a new job, and check what each program is worth to them.</div>` : "";
+  const wi = $("whatif").value.trim() === "" ? null : Number($("whatif").value);
+  let alt = null;
+  if (wi !== null && isFinite(wi)) {
+    const clone = JSON.parse(JSON.stringify(current.data)); clone.facts.income_amount = wi; clone.facts.income_period = "month";
+    alt = new Map(screen(clone, current.entry.date, $("region").value).results.map(r => [r.program.id, r.status]));
+  }
+  $("whatifHead").textContent = alt ? `At ${money(wi)}/month` : "If income changes";
+  $("cliffRows").innerHTML = rows.map(r => {
+    const room = r.roomMonthly >= 0 ? `${money(r.roomMonthly)}/month${r.warn ? ' <span class="overdue" style="background:var(--warn)">Close</span>' : ""}` : `<span class="r-fail">${money(-r.roomMonthly)}/month over</span>`;
+    let what = '<span class="hint">Enter an amount below</span>';
+    if (alt) {
+      const now = r.status !== "no", then = (alt.get(r.program.id) || "no") !== "no";
+      what = now && !then ? '<span class="lose">Would lose it</span>' : !now && then ? '<span class="gain">Would qualify</span>' : now ? "Still fits" : '<span class="hint">Still doesn\'t fit</span>';
+    }
+    return `<tr><td><b>${escapeHtml(r.program.name)}</b></td><td>${money(r.limitMonthly)}/month <span class="hint">(${r.program.maxFpl}%)</span></td><td>${room}</td><td>${what}</td></tr>`;
+  }).join("");
+}
+$("whatif").addEventListener("input", () => current && renderCliff());
+
+/* ======================================================================
+   Returning clients (matched by client ID)
+   ====================================================================== */
+function pastIntakes(label, excludeId) {
+  const k = String(label || "").trim().toLowerCase();
+  if (!k || k === "client" || k === "walk-in") return [];
+  return intakes.filter(i => i.id !== excludeId && String(i.label).trim().toLowerCase() === k).sort((a, b) => b.date.localeCompare(a.date));
+}
+function monthly(f) { const a = annualIncome(f); return a === null ? null : a / 12; }
+function renderReturningNotice() {
+  const past = pastIntakes($("clientLabel").value, current?.entry.id);
+  const box = $("returning");
+  if (!past.length) { box.hidden = true; return; }
+  const last = past[0];
+  box.hidden = false;
+  box.innerHTML = `<span><b>Returning client:</b> ${past.length} past intake${past.length === 1 ? "" : "s"}, last on ${escapeHtml(prettyDate(last.date))} (${escapeHtml(CASE_STATUS[last.status] || last.status)}).</span>
+    <span><button class="small" id="useLast">Add last visit as context</button> <button class="small" id="openLast">Open last visit</button></span>`;
+}
+$("clientLabel").addEventListener("input", renderReturningNotice);
+$("returning").addEventListener("click", (e) => {
+  const last = pastIntakes($("clientLabel").value, current?.entry.id)[0]; if (!last) return;
+  if (e.target.id === "openLast") return openIntake(last, false);
+  if (e.target.id !== "useLast") return;
+  const f = last.data.facts, m = monthly(f);
+  const ctx = `Previous visit (context, ${last.date}): household of ${f.household_size ?? "?"}; income ${m === null ? "unknown" : money(m) + "/month"}; ZIP ${f.zip || "?"}; age ${f.age ?? "?"}; needs then: ${last.data.needs.map(n => NEEDS[n.category]).join(", ") || "none"}; referrals: ${Object.entries(last.referrals || {}).filter(([, r]) => r.status !== "none").map(([pid, r]) => `${programs.find(p => p.id === pid)?.name || "program"} (${REF_STATUS[r.status]})`).join(", ") || "none"}.`;
+  $("notes").value = ($("notes").value.trim() ? $("notes").value.trim() + "\n\n" : "") + ctx;
+  setStatus("Last visit added as context. Today's notes always take priority over it.");
+});
+function renderPast() {
+  const past = pastIntakes(current.entry.label, current.entry.id);
+  $("pastPanel").hidden = !past.length; if (!past.length) return;
+  const last = past[0], a = last.data.facts, b = current.data.facts, ch = [];
+  const ma = monthly(a), mb = monthly(b);
+  if (a.household_size != null && b.household_size != null && a.household_size !== b.household_size) ch.push(`Household size ${a.household_size} → <b>${b.household_size}</b>`);
+  if (ma !== null && mb !== null && Math.abs(ma - mb) >= 1) ch.push(`Income ${money(ma)} → <b class="${mb < ma ? "change-up" : "change-down"}">${money(mb)}</b>/month`);
+  if (a.zip && b.zip && a.zip !== b.zip) ch.push(`ZIP ${escapeHtml(a.zip)} → <b>${escapeHtml(b.zip)}</b>`);
+  const was = new Set(last.data.needs.map(n => n.category)), now = new Set(current.data.needs.map(n => n.category));
+  const added = [...now].filter(c => !was.has(c)), gone = [...was].filter(c => !now.has(c)), again = [...now].filter(c => was.has(c));
+  if (added.length) ch.push(`New needs: <b>${added.map(c => NEEDS[c]).join(", ")}</b>`);
+  if (again.length) ch.push(`Still needs help with: <b class="change-up">${again.map(c => NEEDS[c]).join(", ")}</b>`);
+  if (gone.length) ch.push(`No longer mentioned: ${gone.map(c => NEEDS[c]).join(", ")}`);
+  $("pastMeta").textContent = `— ${past.length} earlier intake${past.length === 1 ? "" : "s"} for ${current.entry.label}`;
+  $("pastChanges").innerHTML = ch.length ? `<div class="warnbox" style="background:var(--accent-soft); border-color:var(--accent)"><b>Since ${escapeHtml(prettyDate(last.date))}:</b><ul style="margin:6px 0 0; padding-left:20px">${ch.map(x => `<li>${x}</li>`).join("")}</ul></div>` : `<p class="hint" style="margin:0">No changes in household facts since ${escapeHtml(prettyDate(last.date))}.</p>`;
+  const region = $("region").value;
+  $("pastRows").innerHTML = past.map(i => {
+    const s = screen(i.data, i.date, region);
+    const refs = Object.entries(i.referrals || {}).filter(([, r]) => r.status !== "none").map(([pid, r]) => `${escapeHtml(programs.find(p => p.id === pid)?.name || "Removed program")}: <b>${REF_STATUS[r.status]}</b>`).join("<br>") || '<span class="hint">none</span>';
+    return `<tr><td style="white-space:nowrap">${escapeHtml(prettyDate(i.date))}</td><td><span class="pill pr-${s.priority}">${s.priority}</span></td><td>${escapeHtml(i.data.needs.map(n => NEEDS[n.category]).join(", "))}</td><td>${refs}</td><td>${escapeHtml(CASE_STATUS[i.status] || i.status)}</td><td><button class="linkbtn" data-open-intake="${i.id}">Open</button></td></tr>`;
+  }).join("");
+}
+$("pastRows").addEventListener("click", (e) => { const id = e.target.dataset.openIntake; if (id) { const x = intakes.find(i => i.id === id); if (x) openIntake(x, false); } });
+
+/* ======================================================================
+   Self-intake: staff review with Claude
+   ====================================================================== */
+function selfAnswersText(e) {
+  const f = e.data.facts, k = e.kiosk || {};
+  return `Client's own answers (self-intake form, ${e.date}): household of ${f.household_size ?? "not answered"}; income ${f.income_amount != null ? `${f.income_amount} ${PERIODS[f.income_period] || ""}` : "not answered"}; ZIP ${f.zip || "not answered"}; age ${f.age ?? "not answered"}; ` +
+    Object.entries(FLAGS).map(([fk, v]) => `${v}: ${f.flags[fk] === true ? "yes" : f.flags[fk] === false ? "no" : "not answered"}`).join("; ") +
+    `; needs help with: ${e.data.needs.map(n => NEEDS[n.category]).join(", ") || "nothing selected"}; needs help today or has a deadline within 7 days: ${k.today === true ? "yes" : k.today === false ? "no" : "not answered"}; has a safe place tonight: ${k.safe === true ? "yes" : k.safe === false ? "NO" : "not answered"}.` +
+    (e.clientNote ? `\n\nClient's note in their own words (${e.data.language}):\n${e.clientNote}` : "");
+}
+function renderSelfBanner() {
+  const e = current.entry;
+  if (e.source !== "self") { $("selfBanner").innerHTML = ""; return; }
+  $("selfBanner").innerHTML = `<div class="infobanner"><h3>${e.reviewed ? "Self-intake, reviewed" : "Entered by the client at the self-intake tablet"}</h3>
+    <div class="hint" style="color:var(--ink)">${e.reviewed ? "Claude has read the client's note and filled in details. Confirm the facts with the client." : "Results below use the client's own answers. Review them together, and let Claude read their note to fill in details and deadlines."}</div>
+    ${e.clientNote ? `<div class="clientnote">“${escapeHtml(e.clientNote)}”<span class="hint"> (${escapeHtml(e.data.language)})</span></div>` : ""}
+    ${!e.reviewed ? `<div class="row noprint"><button class="small primary" id="reviewSelf">Read their answers with Claude</button><button class="small" id="markReviewed">Mark reviewed</button></div>` : ""}</div>`;
+}
+$("selfBanner").addEventListener("click", async (ev) => {
+  const e = current?.entry; if (!e) return;
+  if (ev.target.id === "markReviewed") { e.reviewed = true; persist(); renderScreen(); return; }
+  if (ev.target.id !== "reviewSelf") return;
+  const key = $("key").value.trim(); if (!key) return setStatus("Add your Claude API key above to read the client's note.", true);
+  ev.target.disabled = true; setStatus("Claude is reading the client's answers and note…");
+  try {
+    const data = parseJson(await callClaude(key, buildPrompt(e.date), selfAnswersText(e), 3000)); normalize(data);
+    // Keep anything the client answered that Claude left blank
+    ["household_size", "income_amount", "income_period", "zip", "age"].forEach(k => { if (data.facts[k] == null && e.data.facts[k] != null) data.facts[k] = e.data.facts[k]; });
+    Object.keys(FLAGS).forEach(k => { if (data.facts.flags[k] == null) data.facts.flags[k] = e.data.facts.flags[k]; });
+    const cats = new Set(data.needs.map(n => n.category));
+    e.data.needs.forEach(n => { if (!cats.has(n.category)) data.needs.push(n); });
+    if (e.data.safety?.concern && !data.safety.concern) data.safety = e.data.safety;
+    if (data.language === "English" && e.data.language !== "English") data.language = e.data.language;
+    e.data = data; e.reviewed = true; current.data = data;
+    persist(); renderResults(); setStatus("Done. Claude filled in details from the client's note. Confirm them with the client.");
+  } catch (err) { setStatus(err.message, true); ev.target.disabled = false; }
+});
+
+/* ======================================================================
+   Client self-intake mode (kiosk)
+   ====================================================================== */
+const KI = {
+  en: { lang: "English", rec: "en-US", label: "English", welcome: "Welcome", choose: "Choose your language", intro: "Answer a few questions so we can find help for you. It takes about 3 minutes. You can skip anything you don't want to answer.",
+    name: "Your first name or initials", household: "How many people live in your home, including you?", income: "About how much money does your household get before taxes?", incomeHint: "From work, benefits, support, or anything else. Enter 0 if none.",
+    per: { month: "per month", week: "per week", biweekly: "every 2 weeks", year: "per year" }, zip: "Your ZIP code", age: "Your age",
+    needsQ: "What do you need help with? Choose all that apply.",
+    needs: { food: "Food", housing: "Rent or housing", utilities: "Utility bills", employment: "A job", legal: "Legal help", health: "Health care", childcare: "Childcare", transportation: "Transportation", benefits: "Signing up for benefits", education: "School or training", safety: "Feeling safe", other: "Something else" },
+    about: "About your household", flags: { children: "Are there children under 18 in your home?", senior: "Is anyone in your home 60 or older?", veteran: "Has anyone in your home served in the military?", disability: "Does anyone in your home have a disability?", pregnant: "Is anyone in your home pregnant?" },
+    yes: "Yes", no: "No", skip: "Skip", today: "Do you need help today, or have a deadline in the next 7 days (like an eviction or a shutoff)?", safe: "Do you have a safe place to stay tonight?",
+    notes: "Anything else you want us to know?", speak: "Speak instead of typing", stop: "Stop", consent: "I agree to share my answers with programs that may be able to help me.",
+    submit: "Send my answers", needOne: "Please choose at least one thing you need help with.", thanks: "Thank you!", thanksBody: "Please have a seat. A staff member will call you soon.",
+    unsafe: "If you are in danger right now, call 911. A staff member will be with you right away.", done: "Done" },
+  es: { lang: "Spanish", rec: "es-US", label: "Español", welcome: "Bienvenido", choose: "Elija su idioma", intro: "Conteste unas preguntas para que podamos encontrar ayuda para usted. Toma unos 3 minutos. Puede saltar cualquier pregunta que no quiera contestar.",
+    name: "Su nombre o sus iniciales", household: "¿Cuántas personas viven en su casa, contándose a usted?", income: "¿Más o menos cuánto dinero recibe su hogar antes de impuestos?", incomeHint: "Del trabajo, beneficios, manutención u otra fuente. Escriba 0 si no recibe nada.",
+    per: { month: "al mes", week: "a la semana", biweekly: "cada 2 semanas", year: "al año" }, zip: "Su código postal", age: "Su edad",
+    needsQ: "¿Con qué necesita ayuda? Elija todo lo que corresponda.",
+    needs: { food: "Comida", housing: "Renta o vivienda", utilities: "Facturas de luz, agua o gas", employment: "Trabajo", legal: "Ayuda legal", health: "Atención médica", childcare: "Cuidado de niños", transportation: "Transporte", benefits: "Solicitar beneficios", education: "Escuela o capacitación", safety: "Sentirse seguro", other: "Otra cosa" },
+    about: "Sobre su hogar", flags: { children: "¿Hay niños menores de 18 años en su casa?", senior: "¿Hay alguien de 60 años o más en su casa?", veteran: "¿Alguien en su casa ha servido en las fuerzas armadas?", disability: "¿Alguien en su casa tiene una discapacidad?", pregnant: "¿Alguien en su casa está embarazada?" },
+    yes: "Sí", no: "No", skip: "Saltar", today: "¿Necesita ayuda hoy o tiene una fecha límite en los próximos 7 días (como un desalojo o un corte de servicio)?", safe: "¿Tiene un lugar seguro donde quedarse esta noche?",
+    notes: "¿Algo más que quiera que sepamos?", speak: "Hablar en vez de escribir", stop: "Detener", consent: "Acepto compartir mis respuestas con programas que puedan ayudarme.",
+    submit: "Enviar mis respuestas", needOne: "Por favor elija al menos una cosa con la que necesita ayuda.", thanks: "¡Gracias!", thanksBody: "Por favor tome asiento. Un miembro del personal le llamará pronto.",
+    unsafe: "Si está en peligro ahora mismo, llame al 911. Un miembro del personal le atenderá enseguida.", done: "Listo" },
+  vi: { lang: "Vietnamese", rec: "vi-VN", label: "Tiếng Việt", welcome: "Xin chào", choose: "Chọn ngôn ngữ của bạn", intro: "Hãy trả lời vài câu hỏi để chúng tôi tìm sự giúp đỡ cho bạn. Mất khoảng 3 phút. Bạn có thể bỏ qua bất kỳ câu nào.",
+    name: "Tên hoặc chữ cái đầu của tên bạn", household: "Có bao nhiêu người sống trong nhà bạn, kể cả bạn?", income: "Gia đình bạn nhận được khoảng bao nhiêu tiền trước thuế?", incomeHint: "Từ việc làm, trợ cấp, tiền hỗ trợ hoặc nguồn khác. Nhập 0 nếu không có.",
+    per: { month: "mỗi tháng", week: "mỗi tuần", biweekly: "mỗi 2 tuần", year: "mỗi năm" }, zip: "Mã ZIP của bạn", age: "Tuổi của bạn",
+    needsQ: "Bạn cần giúp đỡ về việc gì? Chọn tất cả những gì phù hợp.",
+    needs: { food: "Thực phẩm", housing: "Tiền thuê nhà hoặc chỗ ở", utilities: "Hóa đơn điện, nước, ga", employment: "Việc làm", legal: "Trợ giúp pháp lý", health: "Chăm sóc sức khỏe", childcare: "Giữ trẻ", transportation: "Đi lại", benefits: "Đăng ký trợ cấp", education: "Học tập hoặc đào tạo", safety: "An toàn", other: "Việc khác" },
+    about: "Về gia đình bạn", flags: { children: "Trong nhà có trẻ em dưới 18 tuổi không?", senior: "Trong nhà có ai từ 60 tuổi trở lên không?", veteran: "Trong nhà có ai từng phục vụ trong quân đội không?", disability: "Trong nhà có ai bị khuyết tật không?", pregnant: "Trong nhà có ai đang mang thai không?" },
+    yes: "Có", no: "Không", skip: "Bỏ qua", today: "Bạn có cần giúp đỡ ngay hôm nay, hoặc có hạn chót trong 7 ngày tới (như bị đuổi nhà hoặc bị cắt điện nước) không?", safe: "Tối nay bạn có chỗ ở an toàn không?",
+    notes: "Bạn có muốn cho chúng tôi biết thêm điều gì không?", speak: "Nói thay vì gõ", stop: "Dừng", consent: "Tôi đồng ý chia sẻ câu trả lời của mình với các chương trình có thể giúp tôi.",
+    submit: "Gửi câu trả lời", needOne: "Vui lòng chọn ít nhất một việc bạn cần giúp đỡ.", thanks: "Cảm ơn bạn!", thanksBody: "Xin mời bạn ngồi. Nhân viên sẽ gọi bạn sớm.",
+    unsafe: "Nếu bạn đang gặp nguy hiểm, hãy gọi 911. Nhân viên sẽ đến với bạn ngay.", done: "Xong" },
+  zh: { lang: "Chinese (Simplified)", rec: "zh-CN", label: "中文", welcome: "欢迎", choose: "请选择您的语言", intro: "请回答几个问题，以便我们为您寻找帮助。大约需要3分钟。您可以跳过任何问题。",
+    name: "您的名字或姓名首字母", household: "包括您在内，您家里住了几个人？", income: "您的家庭税前收入大约是多少？", incomeHint: "包括工作、福利、资助或其他收入。如果没有，请填0。",
+    per: { month: "每月", week: "每周", biweekly: "每两周", year: "每年" }, zip: "您的邮政编码", age: "您的年龄",
+    needsQ: "您需要哪方面的帮助？请选择所有适用的选项。",
+    needs: { food: "食物", housing: "房租或住房", utilities: "水电燃气账单", employment: "工作", legal: "法律帮助", health: "医疗保健", childcare: "托儿", transportation: "交通", benefits: "申请福利", education: "上学或培训", safety: "人身安全", other: "其他" },
+    about: "关于您的家庭", flags: { children: "您家里有18岁以下的孩子吗？", senior: "您家里有60岁或以上的人吗？", veteran: "您家里有人在军队服役过吗？", disability: "您家里有人有残疾吗？", pregnant: "您家里有人怀孕吗？" },
+    yes: "是", no: "否", skip: "跳过", today: "您今天需要帮助吗？或者在未来7天内有截止日期（例如被驱逐或断水断电）吗？", safe: "今晚您有安全的地方住吗？",
+    notes: "您还有什么想让我们知道的吗？", speak: "用说话代替打字", stop: "停止", consent: "我同意将我的回答分享给可能帮助我的项目。",
+    submit: "提交我的回答", needOne: "请至少选择一项您需要帮助的事情。", thanks: "谢谢！", thanksBody: "请坐。工作人员很快会叫您。",
+    unsafe: "如果您现在有危险，请拨打911。工作人员会马上来帮您。", done: "完成" }
+};
+let K = null, kTimer = null, kRec = null;
+function kioskStart() {
+  if (Recorder.active) Recorder.stop();
+  $("kiosk").hidden = false; document.body.style.overflow = "hidden";
+  K = { step: "lang" }; kioskRender();
+}
+function kioskClose() {
+  try { kRec?.stop(); } catch {} kRec = null; clearTimeout(kTimer);
+  $("kiosk").hidden = true; document.body.style.overflow = ""; K = null;
+  renderHistory(); renderDigest();
+}
+function kioskRender() {
+  const box = $("kioskBody"), o = org();
+  if (K.step === "lang") {
+    box.innerHTML = `<p class="eyebrow">${escapeHtml(o.name || "")}</p><h1>Welcome · Bienvenido · Xin chào · 欢迎</h1>
+      <p class="lead">Choose your language · Elija su idioma · Chọn ngôn ngữ · 请选择语言</p>
+      <div class="klangs">${Object.entries(KI).map(([k, t]) => `<button data-klang="${k}">${escapeHtml(t.label)}</button>`).join("")}</div>`;
+    return;
+  }
+  const t = KI[K.lang], a = K.a;
+  if (K.step === "thanks") {
+    box.innerHTML = `<h1 style="margin-top:40px">${escapeHtml(t.thanks)}</h1><p class="lead">${escapeHtml(t.thanksBody)}</p>
+      ${a.safe === false ? `<div class="banner safety"><h3>${escapeHtml(t.unsafe)}</h3></div>` : ""}
+      <button class="kbtn primary" data-kdone style="margin-top:24px">${escapeHtml(t.done)}</button>`;
+    return;
+  }
+  const yn = (key, val) => `<div class="kyn">${[["yes", true], ["no", false], ["skip", null]].map(([w, v]) => `<button data-kyn="${key}" data-v="${w}" class="${val === v && (v !== null || K.touched[key]) ? "on" : ""}">${escapeHtml(t[w])}</button>`).join("")}</div>`;
+  box.innerHTML = `<p class="eyebrow">${escapeHtml(o.name || "")}</p><h1>${escapeHtml(t.welcome)}</h1><p class="lead">${escapeHtml(t.intro)}</p>
+    <div class="kq"><label for="kName">${escapeHtml(t.name)}</label><input id="kName" type="text" maxlength="30" autocomplete="off" value="${escapeHtml(a.name || "")}"></div>
+    <div class="kq"><div class="label">${escapeHtml(t.needsQ)}</div><div class="ktiles">${Object.keys(NEEDS).map(k => `<button data-kneed="${k}" class="${a.needs.includes(k) ? "on" : ""}">${escapeHtml(t.needs[k])}</button>`).join("")}</div></div>
+    <div class="kq"><div class="label">${escapeHtml(t.today)}</div>${yn("today", a.today)}</div>
+    <div class="kq"><div class="label">${escapeHtml(t.safe)}</div>${yn("safe", a.safe)}</div>
+    <div class="kq"><label for="kHouse">${escapeHtml(t.household)}</label><input id="kHouse" type="number" inputmode="numeric" min="1" max="20" value="${a.size ?? ""}"></div>
+    <div class="kq"><label for="kInc">${escapeHtml(t.income)}</label><p class="hint" style="margin:0 0 8px">${escapeHtml(t.incomeHint)}</p>
+      <div class="grid2"><input id="kInc" type="number" inputmode="decimal" min="0" placeholder="$" value="${a.income ?? ""}">
+      <select id="kPer">${Object.entries(t.per).map(([k, v]) => `<option value="${k}" ${k === (a.period || "month") ? "selected" : ""}>${escapeHtml(v)}</option>`).join("")}</select></div></div>
+    <div class="kq grid2"><div><label for="kZip">${escapeHtml(t.zip)}</label><input id="kZip" type="text" inputmode="numeric" maxlength="10" value="${escapeHtml(a.zip || "")}"></div>
+      <div><label for="kAge">${escapeHtml(t.age)}</label><input id="kAge" type="number" inputmode="numeric" min="0" max="120" value="${a.age ?? ""}"></div></div>
+    <div class="kq"><div class="label">${escapeHtml(t.about)}</div>${Object.keys(FLAGS).map(k => `<div class="kflag">${escapeHtml(t.flags[k])}${yn(k, a.flags[k])}</div>`).join("")}</div>
+    <div class="kq"><label for="kNote">${escapeHtml(t.notes)}</label><textarea id="kNote" style="min-height:120px">${escapeHtml(a.note || "")}</textarea>
+      <button class="kbtn" id="kSpeak" style="margin-top:10px">🎤 ${escapeHtml(t.speak)}</button></div>
+    <div class="kq"><label style="display:flex; gap:12px; align-items:flex-start; font-weight:500"><input type="checkbox" id="kConsent" style="width:26px; height:26px; flex:none" ${a.consent ? "checked" : ""}> ${escapeHtml(t.consent)}</label></div>
+    <div id="kErr" class="kerr" role="alert"></div>
+    <button class="kbtn primary" id="kSubmit" style="margin-top:16px; width:100%">${escapeHtml(t.submit)}</button>`;
+}
+function kioskSave() {
+  if (!K || !K.a) return;
+  const a = K.a, v = (id) => $(id)?.value?.trim() ?? "";
+  a.name = v("kName"); a.size = v("kHouse") === "" ? null : Number(v("kHouse")); a.income = v("kInc") === "" ? null : Number(v("kInc"));
+  a.period = v("kPer") || "month"; a.zip = v("kZip"); a.age = v("kAge") === "" ? null : Number(v("kAge")); a.note = $("kNote")?.value.trim() || ""; a.consent = !!$("kConsent")?.checked;
+}
+$("kioskBody").addEventListener("click", (e) => {
+  const d = e.target.dataset;
+  if (d.klang) { K = { step: "form", lang: d.klang, touched: {}, a: { needs: [], flags: {}, today: null, safe: null, period: "month" } }; kioskRender(); window.scrollTo(0, 0); $("kiosk").scrollTop = 0; return; }
+  if (d.kdone !== undefined) { clearTimeout(kTimer); K = { step: "lang" }; kioskRender(); return; }
+  if (!K || K.step !== "form") return;
+  if (d.kneed) { kioskSave(); const n = K.a.needs; K.a.needs = n.includes(d.kneed) ? n.filter(x => x !== d.kneed) : [...n, d.kneed]; e.target.classList.toggle("on"); return; }
+  if (d.kyn) {
+    kioskSave(); const val = d.v === "yes" ? true : d.v === "no" ? false : null;
+    if (d.kyn === "today" || d.kyn === "safe") K.a[d.kyn] = val; else K.a.flags[d.kyn] = val;
+    K.touched[d.kyn] = true;
+    e.target.parentElement.querySelectorAll("button").forEach(b => b.classList.toggle("on", b === e.target));
+    return;
+  }
+  if (e.target.id === "kSpeak") return kioskSpeak(e.target);
+  if (e.target.id === "kSubmit") return kioskSubmit();
+});
+function kioskSpeak(btn) {
+  const t = KI[K.lang], SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { btn.disabled = true; return; }
+  if (kRec) { try { kRec.stop(); } catch {} kRec = null; btn.textContent = `🎤 ${t.speak}`; btn.classList.remove("recording"); return; }
+  kRec = new SR(); kRec.lang = t.rec; kRec.continuous = true; kRec.interimResults = false;
+  kRec.onresult = (ev) => { for (let i = ev.resultIndex; i < ev.results.length; i++) if (ev.results[i].isFinal) { const x = $("kNote"); x.value += (x.value ? " " : "") + ev.results[i][0].transcript.trim(); } };
+  kRec.onend = () => { if (kRec) { try { kRec.start(); } catch {} } };
+  try { kRec.start(); btn.textContent = `■ ${t.stop}`; btn.classList.add("rec-btn", "recording"); } catch { kRec = null; }
+}
+function kioskSubmit() {
+  kioskSave();
+  const t = KI[K.lang], a = K.a;
+  if (!a.needs.length) { $("kErr").textContent = t.needOne; $("kErr").scrollIntoView({ block: "center" }); return; }
+  try { kRec?.stop(); } catch {} kRec = null;
+  const date = isoToday();
+  const data = {
+    summary: `Self-intake entered by the client. ${a.needs.length} area${a.needs.length === 1 ? "" : "s"} of need selected${a.today ? "; says they need help today or have a deadline within 7 days" : ""}${a.safe === false ? "; says they do NOT have a safe place to stay tonight" : ""}. Review the answers with the client.`,
+    language: t.lang,
+    facts: { household_size: a.size >= 1 ? Math.round(a.size) : null, income_amount: a.income !== null && a.income >= 0 ? a.income : null, income_period: a.income !== null ? a.period : null,
+      zip: a.zip || null, age: a.age !== null && a.age >= 0 ? Math.round(a.age) : null,
+      flags: Object.fromEntries(Object.keys(FLAGS).map(k => [k, a.flags[k] === true ? true : a.flags[k] === false ? false : null])) },
+    needs: a.needs.map(c => ({ category: c, detail: `Client selected: ${NEEDS[c]}`, urgency: a.today ? "urgent" : "routine", deadline: null })),
+    safety: a.safe === false ? { concern: true, note: "Client said they do not have a safe place to stay tonight." } : { concern: false, note: null },
+    follow_up_questions: []
+  };
+  normalize(data);
+  intakes.unshift({ id: newId(), date, label: a.name || "Walk-in", consent: a.consent, savedAt: new Date().toISOString(), source: "self", reviewed: false,
+    clientNote: a.note, kiosk: { today: a.today, safe: a.safe }, data, referrals: {}, status: "new", caseworker: "", followUp: "", notes: "", next: null, extras: [] });
+  saveIntakes();
+  K.step = "thanks"; kioskRender(); $("kiosk").scrollTop = 0;
+  clearTimeout(kTimer); kTimer = setTimeout(() => { if (K?.step === "thanks") { K = { step: "lang" }; kioskRender(); } }, 30000);
+}
+$("kioskOpen").addEventListener("click", kioskStart);
+$("kioskExit").addEventListener("click", () => {
+  if (settings.pin) { const pin = prompt("Staff PIN to leave self-intake mode:"); if (pin === null) return; if (pin !== settings.pin) { alert("That PIN isn't right."); return; } }
+  else if (!confirm("Leave self-intake mode and return to the staff screen?")) return;
+  kioskClose();
+});
+
 (function start() {
   const params = new URLSearchParams(location.search), saved = readStore(ORG_KEY, {});
   $("orgType").value = ORG_TYPES[params.get("type")] ? params.get("type") : (ORG_TYPES[saved.type] ? saved.type : "multi");
@@ -1266,6 +1698,8 @@ $("recLang").innerHTML = REC_LANGS.map(([c, n]) => `<option value="${c}">${n}</o
   if (!Array.isArray(programs)) { programs = presetPrograms($("orgType").value); savePrograms(); }
   $("intakeDate").value = isoToday();
   applyOrg(); renderPrograms(); renderPeople(); renderHistory(); renderDigest();
+  renderReturningNotice();
+  if (params.get("kiosk") === "1") kioskStart();
   if (location.search) history.replaceState(null, "", location.pathname);
 })();
 </script>
